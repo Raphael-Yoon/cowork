@@ -1,0 +1,11 @@
+# 감사 작업 결과물 — 민감 데이터, 깃 추적 제외
+260223/
+Audit_Evidence_Final_SOP_Compliant.xlsx
+Evidence_요청승인자_정리.xlsx
+PBC_Request_List_2026.xlsx
+
+# 일반
+*.pyc
+__pycache__/
+.DS_Store
+.vscode/
