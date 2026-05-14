@@ -54,7 +54,7 @@ def save(records: list[dict], data_date: str):
     cursor = conn.cursor()
     cursor.execute("DELETE FROM audit_recommendations WHERE data_date = ?", (data_date,))
     cursor.executemany(
-        "INSERT INTO audit_recommendations "
+        "INSERT OR REPLACE INTO audit_recommendations "
         "(code, name, current_price, target_price, upside, roe, debt, reason, created_at, data_date) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         db_rows
