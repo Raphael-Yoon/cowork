@@ -30,6 +30,7 @@ def save(records: list[dict], data_date: str):
             "upside":        15.8,
             "roe":           63.0,
             "debt":          29.9,
+            "score":         78.5,
             "reason":        "[반도체] 뉴스:실적·최고 | ROE 63.0% | 수급 외인+3444660/기관-844124"
         },
         ...
@@ -45,7 +46,7 @@ def save(records: list[dict], data_date: str):
             r['code'], r['name'],
             float(r['current_price']), float(r['target_price']),
             float(r['upside']), float(r['roe']), float(r['debt']),
-            r['reason'], now_str, data_date
+            r['reason'], float(r.get('score', 0.0)), now_str, data_date
         )
         for r in records
     ]
@@ -55,8 +56,8 @@ def save(records: list[dict], data_date: str):
     cursor.execute("DELETE FROM audit_recommendations WHERE data_date = ?", (data_date,))
     cursor.executemany(
         "INSERT OR REPLACE INTO audit_recommendations "
-        "(code, name, current_price, target_price, upside, roe, debt, reason, created_at, data_date) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "(code, name, current_price, target_price, upside, roe, debt, reason, score, created_at, data_date) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         db_rows
     )
     conn.commit()
