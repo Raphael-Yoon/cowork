@@ -63,7 +63,7 @@ def save(records: list[dict], data_date: str):
     conn.commit()
     conn.close()
 
-    print(f"✅ {len(db_rows)}개 종목 저장 완료 (data_date={data_date})")
+    print(f"[완료] {len(db_rows)}개 종목 저장 완료 (data_date={data_date})")
     for r in records:
         print(f"   [{r['code']}] {r['name']}  상승여력 {r['upside']:.1f}%")
 
