@@ -26,7 +26,18 @@
 | `Paper/review_guide.md` | 통제별 상세 리뷰 가이드 |
 | `RCM/RCM_Standard.xlsx` | 기본 RCM 표준 서식 |
 
-## 4. 환경 관리 원칙 (Local)
+## 4. Top 10 선정 트리거 (IT 감사팀 전용)
+
+사용자가 **"Top 10 선정"** 또는 **"공략주 선정"** 을 요청하면 아래 절차를 반드시 따른다.
+
+1. `trade/trade.db` → `stock_pool` 테이블에서 100개 종목 조회
+2. AI가 네이티브 웹 검색으로 각 종목의 현재가·52주 범위·수급·뉴스 수집 (`audit_logic.md` 섹션 2-C 기준)
+3. 복합 스코어 산출 후 상위 10개 결정 (`audit_logic.md` 섹션 4 기준)
+4. `recommendations.json` 작성 → `python cowork/audit_save.py recommendations.json` 실행
+
+> **[금지]** 2·3단계(검색·분석·스코어링)를 위한 Python 코드를 작성하지 않는다. `audit_save.py` 호출 외 Python 코드 작성은 절대 금지.
+
+## 5. 환경 관리 원칙 (Local)
 
 - **보존 대상**: `Evidence/` 폴더 전체, `Paper/` 원본 엑셀 조서, `RCM/` 폴더
 - **삭제 대상**: 임시 생성한 데이터 매핑용 `.py` 파일 및 테스트 결과 엑셀
