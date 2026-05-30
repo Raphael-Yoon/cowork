@@ -30,10 +30,11 @@
 
 사용자가 **"Top 10 선정"** 또는 **"공략주 선정"** 을 요청하면 아래 절차를 반드시 따른다.
 
-1. `trade/trade.db` → `stock_pool` 테이블에서 100개 종목 조회
-2. AI가 네이티브 웹 검색으로 각 종목의 현재가·52주 범위·수급·뉴스 수집 (`audit_logic.md` 섹션 2-C 기준)
-3. 복합 스코어 산출 후 상위 10개 결정 (`audit_logic.md` 섹션 4 기준)
-4. `recommendations.json` 작성 → `python cowork/audit_save.py recommendations.json` 실행
+1. `trade/trade.db` → `stock_pool` 테이블에서 100개 종목 및 `stock_disclosures` 테이블에서 최근 30일간의 기업 공시 자료를 함께 조회한다.
+2. AI가 네이티브 웹 검색(현재가, 수급, 뉴스)과 조회한 공시 데이터(감사의견, 소송, 배임/횡령, 수주 등)를 종합 취합한다.
+3. `audit_logic.md` 섹션 3의 Hard Filter를 적용해 리스크 종목을 사전에 배제한 후, 섹션 4의 복합 스코어 알고리즘(공시 모멘텀 가감점 포함)을 적용하여 상위 10개 우량 종목을 최종 결정한다.
+4. `recommendations.json` 작성 시, 종목별 `news_summary` 필드에 주요 뉴스 외에 분석한 **공시 요약 내용도 명시**하여 기록한다.
+5. `python cowork/audit_save.py recommendations.json` 실행하여 DB에 최종 적재한다.
 
 > **[금지]** 2·3단계(검색·분석·스코어링)를 위한 Python 코드를 작성하지 않는다. `audit_save.py` 호출 외 Python 코드 작성은 절대 금지.
 

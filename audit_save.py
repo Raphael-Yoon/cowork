@@ -46,7 +46,9 @@ def save(records: list[dict], data_date: str):
             r['code'], r['name'],
             float(r['current_price']), float(r['target_price']),
             float(r['upside']), float(r['roe']), float(r['debt']),
-            r['reason'], float(r.get('score', 0.0)), now_str, data_date
+            r['reason'], float(r.get('score', 0.0)),
+            r.get('news_summary', ''),
+            now_str, data_date
         )
         for r in records
     ]
@@ -56,8 +58,8 @@ def save(records: list[dict], data_date: str):
     cursor.execute("DELETE FROM audit_recommendations WHERE data_date = ?", (data_date,))
     cursor.executemany(
         "INSERT OR REPLACE INTO audit_recommendations "
-        "(code, name, current_price, target_price, upside, roe, debt, reason, score, created_at, data_date) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "(code, name, current_price, target_price, upside, roe, debt, reason, score, news_summary, created_at, data_date) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         db_rows
     )
     conn.commit()
