@@ -16,6 +16,9 @@ recommendations.json.bak
 quiz/
 *.md.bak
 
+# 개인 문서
+혈액수치.md
+
 # 일반
 *.pyc
 __pycache__/
