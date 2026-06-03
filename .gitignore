@@ -8,8 +8,17 @@ PBC_Request_List_2026.xlsx
 credentials.json
 *.pickle
 
+# 산출물 및 임시 파일
+scratch/
+*.xlsx
+recommendations.json
+recommendations.json.bak
+quiz/
+*.md.bak
+
 # 일반
 *.pyc
 __pycache__/
 .DS_Store
 .vscode/
+

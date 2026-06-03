@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-IT 감사팀 추천 종목 DB 저장 유틸리티
+IT 감사팀 Top 10 추천 종목 저장 유틸리티
 기준 문서: cowork/Report/audit_logic.md
 
-AI가 분석·결정한 추천 종목을 trade.db에 저장하는 역할만 담당.
+AI가 분석·결정한 추천 종목을 recommendations.json에 저장하는 역할만 담당.
+(DB 저장 없음 — Top 10은 세션성 데이터로 JSON 파일로만 관리)
 
 사용법:
     python cowork/audit_save.py recommendations.json
@@ -11,11 +12,10 @@ AI가 분석·결정한 추천 종목을 trade.db에 저장하는 역할만 담�
 """
 import argparse
 import json
-import sqlite3
 from datetime import datetime
 from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parents[1] / 'trade' / 'trade.db'
+OUTPUT_PATH = Path(__file__).resolve().parent / 'recommendations.json'
 
 
 def save(records: list[dict], data_date: str):
@@ -31,7 +31,8 @@ def save(records: list[dict], data_date: str):
             "roe":           63.0,
             "debt":          29.9,
             "score":         78.5,
-            "reason":        "[반도체] 뉴스:실적·최고 | ROE 63.0% | 수급 외인+3444660/기관-844124"
+            "reason":        "[반도체] 뉴스:실적·최고 | ROE 63.0% | 수급 외인+/기관-",
+            "news_summary":  "..."
         },
         ...
     ]
@@ -40,38 +41,22 @@ def save(records: list[dict], data_date: str):
         print("[오류] 저장할 데이터가 없습니다.")
         return
 
-    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    db_rows = [
-        (
-            r['code'], r['name'],
-            float(r['current_price']), float(r['target_price']),
-            float(r['upside']), float(r['roe']), float(r['debt']),
-            r['reason'], float(r.get('score', 0.0)),
-            r.get('news_summary', ''),
-            now_str, data_date
-        )
-        for r in records
-    ]
+    output = {
+        "data_date": data_date,
+        "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        "stocks": records
+    }
 
-    conn = sqlite3.connect(str(DB_PATH))
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM audit_recommendations WHERE data_date = ?", (data_date,))
-    cursor.executemany(
-        "INSERT OR REPLACE INTO audit_recommendations "
-        "(code, name, current_price, target_price, upside, roe, debt, reason, score, news_summary, created_at, data_date) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        db_rows
-    )
-    conn.commit()
-    conn.close()
+    with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
+        json.dump(output, f, ensure_ascii=False, indent=2)
 
-    print(f"[완료] {len(db_rows)}개 종목 저장 완료 (data_date={data_date})")
+    print(f"[완료] {len(records)}개 종목 저장 완료 → {OUTPUT_PATH}")
     for r in records:
         print(f"   [{r['code']}] {r['name']}  상승여력 {r['upside']:.1f}%")
 
 
 def main():
-    parser = argparse.ArgumentParser(description='IT 감사팀 추천 종목 DB 저장')
+    parser = argparse.ArgumentParser(description='IT 감사팀 Top 10 추천 종목 저장')
     parser.add_argument('json_file', help='추천 종목 JSON 파일 경로')
     parser.add_argument('--date', default=datetime.now().strftime('%Y-%m-%d'),
                         help='기준일 (기본값: 오늘, 형식: YYYY-MM-DD)')
@@ -84,6 +69,9 @@ def main():
 
     with open(json_path, encoding='utf-8') as f:
         records = json.load(f)
+
+    if isinstance(records, dict) and 'stocks' in records:
+        records = records['stocks']
 
     save(records, args.date)
 

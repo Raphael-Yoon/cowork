@@ -8,9 +8,9 @@
 
 - **목적**: 주관적 판단을 배제하고 재무 지표, 시장 가격, 수급, 뉴스 모멘텀을 결합한 객관적 투자 후보군 도출.
 - **대상**: KOSPI/KOSDAQ 상장사 중 재무 분석 보고서가 존재하는 종목.
-- **Python 코드의 역할**: AI가 결정한 결과를 DB에 저장하는 것에 한정. 분석·판단·데이터 조회는 AI가 수행.
+- **Python 코드의 역할**: AI가 결정한 결과를 JSON 파일로 저장하는 것에 한정. 분석·판단·데이터 조회는 AI가 수행.
 
-> **[주의] STEP 2·3의 분석(뉴스 검색, 수급 조회, 스코어 산출)은 AI가 네이티브 웹 검색 기능으로 직접 수행한다. 이 과정에 대한 Python 코드를 작성하지 않는다. Python 코드는 오직 DB 저장(pool_save.py, audit_save.py) 용도로만 존재한다.**
+> **[주의] STEP 2·3의 분석(뉴스 검색, 수급 조회, 스코어 산출)은 AI가 네이티브 웹 검색 기능으로 직접 수행한다. 이 과정에 대한 Python 코드를 작성하지 않는다.**
 
 ### 전체 프로세스
 
@@ -21,12 +21,14 @@
 [STEP 2 - 정기] 100개 pool 구성 (AI 수행)
     AI가 구글 드라이브 Excel 직접 접근 또는 파일 다운로드
     → 재무 기반 필터링·스코어링으로 100개 종목 선정
-    → pool_save.py → trade.db stock_pool 테이블 저장
+    → pool_save.py → Neon PostgreSQL stock_pool 테이블 저장
 
-[STEP 3 - 비정기] Top 10 선정 (AI 수행)
-    AI가 stock_pool 100개 종목의 뉴스 검색·수급 조회
+[STEP 3 - 비정기] Top 10 선정 (select_top_10.py 실행 또는 AI 수행)
+    stock_pool 100개 종목 조회
+    + DART API 직접 조회 (최근 30일 공시 — 실행 시점에 실시간 수집, DB 저장 없음)
+    + AI 네이티브 웹 검색 (현재가, 수급, 뉴스)
     → 복합 스코어 산출 → 상위 10개 결정
-    → audit_save.py → trade.db audit_recommendations 테이블 저장
+    → cowork/recommendations.json 저장
 ```
 
 ---
@@ -74,6 +76,11 @@ AI가 구글 드라이브에 직접 접근하거나 파일을 다운로드하여
 | **기관 수급 방향** | 최근 N일 순매수/순매도 흐름 |
 | **뉴스 심리** | 네이버 금융 뉴스 — 최근 10건 기사 제목 분석 |
 
+### 2-D. DART 공시 (실행 시점 직접 조회) — DB 저장 없음
+
+Top 10 선정 시 `select_top_10.py` 내부에서 DART API를 직접 호출하여 최근 30일 공시를 수집한다.  
+공시 데이터는 메모리에서만 처리하며 DB에 저장하지 않는다.
+
 ---
 
 ## 3. 필터링 로직 (Noise Filtering)
@@ -89,11 +96,11 @@ AI가 구글 드라이브에 직접 접근하거나 파일을 다운로드하여
 - **목표주가 미보유 제외**: 증권사 컨센서스가 없는 종목 제외.
 - pool_score 상위 100개 선정.
 
-### STEP 3 — Top 10 선정 (네이버 금융 웹 조회 및 DART 공시 기반)
+### STEP 3 — Top 10 선정 (DART 직접 조회 + 네이버 금융 웹 조회 기반)
 
 - **상승여력 부재 제외**: 네이버에서 조회한 현재가 기준으로 목표주가 대비 업사이드 ≤ 0인 종목 제외.
 - **중대 공시 리스크 제외 (Hard Filter)**: 최근 30일 이내에 감사의견 비적정(의견거절/범위제한 한정), 내부회계관리제도 비적정, 또는 대표이사 및 임직원의 배임/횡령 공시가 확인된 종목은 최종 Top 10 선정에서 즉시 강제 배제.
-- **단기 하락 추세(역배열) 제외 (Hard Filter) [NEW]**: 현재가가 5일 이동평균선(MA5) 또는 20일 이동평균선(MA20)보다 아래에 위치한 종목(`ma5_diff <= 0` AND `ma20_diff <= 0`)은 주가가 하향 곡선을 그리는 하락 추세로 간주하여 최종 선정에서 즉시 강제 배제.
+- **단기 하락 추세(역배열) 제외 (Hard Filter)**: 현재가가 5일 이동평균선(MA5) 또는 20일 이동평균선(MA20)보다 아래에 위치한 종목(`ma5_diff <= 0` AND `ma20_diff <= 0`)은 즉시 강제 배제.
 - 복합 스코어 상위 10개 선정.
 
 ---
@@ -124,12 +131,10 @@ All items normalized to 0~100.
 #### 4-2. 수급 (20%) — 외국인 12% + 기관 8%
 - **반드시 네이버 금융 웹 조회로 수집**한 최근 수급 방향으로 판단한다.
 - 판단 기준: 단순 보유율(%)이 아닌 **순매수/순매도 흐름의 방향과 연속성**.
-  - 유입 강도: N일 연속 순매수 > 단발 순매수 > 보합 > 단발 순매도 > N일 연속 순매도
 - **외인 이탈 시 감점 처리** (패널티 적용).
 
 #### 4-3. 주가 모멘텀 (20%)
 - **반드시 네이버 금융 웹 조회**로 현재가·52주 최고/최저가를 수집한다.
-- 52주 저점 대비 현재가 회복 탄력성.
 - 산식: `(현재가 - 52주최저가) / (52주최고가 - 52주최저가) × 100`
 
 #### 4-4. 저평가 (Upside, 20%)
@@ -146,13 +151,13 @@ All items normalized to 0~100.
 
 ### STEP 2 — pool 저장
 
-AI가 100개 pool을 결정한 후 아래 명령으로 DB에 저장합니다.
+AI가 100개 pool을 결정한 후 아래 명령으로 Neon PostgreSQL에 저장합니다.
 
 ```
 python cowork/pool_save.py pool.json
 ```
 
-저장 위치: `trade/trade.db` → `stock_pool` 테이블
+저장 위치: Neon PostgreSQL → `stock_pool` 테이블
 
 저장 컬럼:
 
@@ -170,33 +175,39 @@ python cowork/pool_save.py pool.json
 
 ### STEP 3 — Top 10 저장
 
-AI가 추천 종목을 결정한 후 아래 명령으로 DB에 저장합니다.
+Top 10 결과는 DB에 저장하지 않고 JSON 파일로만 관리합니다.
 
 ```
 python cowork/audit_save.py recommendations.json
 python cowork/audit_save.py recommendations.json --date 2026-05-10
 ```
 
-저장 위치: `trade/trade.db` → `audit_recommendations` 테이블  
-저장 건수: Score 상위 10개 종목
+저장 위치: `cowork/recommendations.json`
 
-저장 컬럼:
+저장 형식:
 
-| 컬럼 | 내용 |
-| :--- | :--- |
-| `code` | 종목코드 |
-| `name` | 종목명 |
-| `current_price` | 현재가 |
-| `target_price` | 목표주가 |
-| `upside` | 상승여력(%) |
-| `roe` | ROE(%) |
-| `debt` | 부채비율(%) |
-| `score` | 복합 스코어 |
-| `reason` | `[업종] 뉴스:{점수}점 \| ROE {값}% \| 수급 외인{값}/기관{값}` 형식 |
-| `created_at` | 저장 시각 (`YYYY-MM-DD HH:MM:SS`) |
-| `data_date` | 기준일 (`YYYY-MM-DD`) |
+```json
+{
+  "data_date": "2026-06-03",
+  "created_at": "2026-06-03 15:40:00",
+  "stocks": [
+    {
+      "code": "005930",
+      "name": "삼성전자",
+      "current_price": 268500,
+      "target_price": 310800,
+      "upside": 15.8,
+      "roe": 63.0,
+      "debt": 29.9,
+      "score": 78.5,
+      "reason": "[반도체] 뉴스:실적·최고 | ROE 63.0% | 수급 외인+/기관-",
+      "news_summary": "..."
+    }
+  ]
+}
+```
 
 ---
 
 **작성자**: IT 감사팀장 서화진  
-**최종 수정일**: 2026-05-26 (스코어링 가중치 조정 — ROE 30%→35%, Upside 30%→25%)
+**최종 수정일**: 2026-06-03 (DB 구조 단순화 — audit_recommendations 테이블 폐기, DART 직접 조회 방식으로 전환, Neon PostgreSQL 마이그레이션 반영)

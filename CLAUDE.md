@@ -28,15 +28,13 @@
 
 ## 4. Top 10 선정 트리거 (IT 감사팀 전용)
 
-사용자가 **"Top 10 선정"** 또는 **"공략주 선정"** 을 요청하면 아래 절차를 반드시 따른다.
+선정 프로세스, 필터링 기준, 스코어링 알고리즘은 **[audit_logic.md](Report/audit_logic.md)** 를 단일 정의서로 따른다.
 
-1. `trade/trade.db` → `stock_pool` 테이블에서 100개 종목 및 `stock_disclosures` 테이블에서 최근 30일간의 기업 공시 자료를 함께 조회한다.
-2. AI가 네이티브 웹 검색(현재가, 수급, 뉴스)과 조회한 공시 데이터(감사의견, 소송, 배임/횡령, 수주 등)를 종합 취합한다.
-3. `audit_logic.md` 섹션 3의 Hard Filter를 적용해 리스크 종목을 사전에 배제한 후, 섹션 4의 복합 스코어 알고리즘(공시 모멘텀 가감점 포함)을 적용하여 상위 10개 우량 종목을 최종 결정한다.
-4. `recommendations.json` 작성 시, 종목별 `news_summary` 필드에 주요 뉴스 외에 분석한 **공시 요약 내용도 명시**하여 기록한다.
-5. `python cowork/audit_save.py recommendations.json` 실행하여 DB에 최종 적재한다.
-
-> **[금지]** 2·3단계(검색·분석·스코어링)를 위한 Python 코드를 작성하지 않는다. `audit_save.py` 호출 외 Python 코드 작성은 절대 금지.
+| 스크립트 | 역할 |
+|---|---|
+| `trade/select_top_10.py` | pool → Top 10 자동 선정 (DART 직접 조회 포함) |
+| `cowork/pool_save.py` | AI가 결정한 pool 100건을 Neon stock_pool 테이블에 저장 |
+| `cowork/audit_save.py` | AI가 결정한 Top 10을 `recommendations.json`에 저장 |
 
 ## 5. 환경 관리 원칙 (Local)
 
