@@ -3,8 +3,7 @@
 IT 감사팀 Top 10 추천 종목 저장 유틸리티
 기준 문서: cowork/Report/audit_logic.md
 
-AI가 분석·결정한 추천 종목을 recommendations.json에 저장하는 역할만 담당.
-(DB 저장 없음 — Top 10은 세션성 데이터로 JSON 파일로만 관리)
+AI가 분석·결정한 추천 종목을 Neon DB의 audit_recommendations 테이블에 저장.
 
 사용법:
     python cowork/audit_save.py recommendations.json
@@ -12,10 +11,17 @@ AI가 분석·결정한 추천 종목을 recommendations.json에 저장하는 �
 """
 import argparse
 import json
+import os
+import psycopg2
+import psycopg2.extras
 from datetime import datetime
 from pathlib import Path
+from dotenv import load_dotenv
 
-OUTPUT_PATH = Path(__file__).resolve().parent / 'recommendations.json'
+# trade/.env 로드
+env_path = Path(__file__).resolve().parents[1] / 'trade' / '.env'
+load_dotenv(env_path)
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 
 def save(records: list[dict], data_date: str):
@@ -41,18 +47,37 @@ def save(records: list[dict], data_date: str):
         print("[오류] 저장할 데이터가 없습니다.")
         return
 
-    output = {
-        "data_date": data_date,
-        "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        "stocks": records
-    }
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
-        json.dump(output, f, ensure_ascii=False, indent=2)
-
-    print(f"[완료] {len(records)}개 종목 저장 완료 → {OUTPUT_PATH}")
+    print(f"[완료] {len(records)}개 종목 DB 적재 시작")
     for r in records:
         print(f"   [{r['code']}] {r['name']}  상승여력 {r['upside']:.1f}%")
+
+    # Neon DB audit_recommendations 저장
+    if not DATABASE_URL:
+        print("[오류] DATABASE_URL 환경 변수가 설정되지 않아 DB 저장을 건너뜁니다.")
+        return
+
+    try:
+        conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.DictCursor)
+        cursor = conn.cursor()
+        cursor.execute("TRUNCATE TABLE audit_recommendations")
+        
+        for r in records:
+            cursor.execute("""
+                INSERT INTO audit_recommendations
+                    (code, name, current_price, target_price, upside, opinion, data_date, created_at, score, roe, debt, reason, news_summary)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                r['code'], r['name'], float(r['current_price']), float(r['target_price']),
+                float(r['upside']), '', data_date, now_str, float(r['score']),
+                float(r.get('roe', 0)), float(r.get('debt', 0)), r.get('reason', ''), r.get('news_summary', '')
+            ))
+        conn.commit()
+        conn.close()
+        print("[완료] Neon DB audit_recommendations 테이블 적재 성공!")
+    except Exception as e:
+        print(f"[오류] Neon DB audit_recommendations 적재 실패: {e}")
 
 
 def main():

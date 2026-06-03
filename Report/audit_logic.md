@@ -28,7 +28,7 @@
     + DART API 직접 조회 (최근 30일 공시 — 실행 시점에 실시간 수집, DB 저장 없음)
     + AI 네이티브 웹 검색 (현재가, 수급, 뉴스)
     → 복합 스코어 산출 → 상위 10개 결정
-    → cowork/recommendations.json 저장
+    → Neon PostgreSQL audit_recommendations 테이블 저장
 ```
 
 ---
@@ -175,39 +175,16 @@ python cowork/pool_save.py pool.json
 
 ### STEP 3 — Top 10 저장
 
-Top 10 결과는 DB에 저장하지 않고 JSON 파일로만 관리합니다.
+Top 10 결과는 Neon PostgreSQL의 `audit_recommendations` 테이블에 저장합니다.
 
 ```
 python cowork/audit_save.py recommendations.json
 python cowork/audit_save.py recommendations.json --date 2026-05-10
 ```
 
-저장 위치: `cowork/recommendations.json`
-
-저장 형식:
-
-```json
-{
-  "data_date": "2026-06-03",
-  "created_at": "2026-06-03 15:40:00",
-  "stocks": [
-    {
-      "code": "005930",
-      "name": "삼성전자",
-      "current_price": 268500,
-      "target_price": 310800,
-      "upside": 15.8,
-      "roe": 63.0,
-      "debt": 29.9,
-      "score": 78.5,
-      "reason": "[반도체] 뉴스:실적·최고 | ROE 63.0% | 수급 외인+/기관-",
-      "news_summary": "..."
-    }
-  ]
-}
-```
+저장 위치: Neon PostgreSQL → `audit_recommendations` 테이블
 
 ---
 
 **작성자**: IT 감사팀장 서화진  
-**최종 수정일**: 2026-06-03 (DB 구조 단순화 — audit_recommendations 테이블 폐기, DART 직접 조회 방식으로 전환, Neon PostgreSQL 마이그레이션 반영)
+**최종 수정일**: 2026-06-03 (Neon PostgreSQL 마이그레이션 및 audit_recommendations 테이블 적재 로직 동기화 반영)
