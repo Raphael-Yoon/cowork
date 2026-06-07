@@ -24,7 +24,7 @@ load_dotenv(env_path)
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 
-def save(records: list[dict], data_date: str):
+def save(records: list[dict], data_date: str, rec_type: str = 'momentum'):
     """
     records 형식:
     [
@@ -38,7 +38,8 @@ def save(records: list[dict], data_date: str):
             "debt":          29.9,
             "score":         78.5,
             "reason":        "[반도체] 뉴스:실적·최고 | ROE 63.0% | 수급 외인+/기관-",
-            "news_summary":  "..."
+            "news_summary":  "...",
+            "rec_type":      "value"
         },
         ...
     ]
@@ -49,7 +50,7 @@ def save(records: list[dict], data_date: str):
 
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    print(f"[완료] {len(records)}개 종목 DB 적재 시작")
+    print(f"[완료] {len(records)}개 종목 DB 적재 시작 (추천유형: {rec_type})")
     for r in records:
         print(f"   [{r['code']}] {r['name']}  상승여력 {r['upside']:.1f}%")
 
@@ -61,21 +62,25 @@ def save(records: list[dict], data_date: str):
     try:
         conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.DictCursor)
         cursor = conn.cursor()
-        cursor.execute("TRUNCATE TABLE audit_recommendations")
+        
+        # 전체를 다 비우지 않고 해당 추천 유형만 삭제 후 추가
+        cursor.execute("DELETE FROM audit_recommendations WHERE rec_type = %s", (rec_type,))
         
         for r in records:
+            item_rec_type = r.get('rec_type', rec_type)
             cursor.execute("""
                 INSERT INTO audit_recommendations
-                    (code, name, current_price, target_price, upside, opinion, data_date, created_at, score, roe, debt, reason, news_summary)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    (code, name, current_price, target_price, upside, opinion, data_date, created_at, score, roe, debt, reason, news_summary, rec_type)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 r['code'], r['name'], float(r['current_price']), float(r['target_price']),
                 float(r['upside']), '', data_date, now_str, float(r['score']),
-                float(r.get('roe', 0)), float(r.get('debt', 0)), r.get('reason', ''), r.get('news_summary', '')
+                float(r.get('roe', 0)), float(r.get('debt', 0)), r.get('reason', ''), r.get('news_summary', ''),
+                item_rec_type
             ))
         conn.commit()
         conn.close()
-        print("[완료] Neon DB audit_recommendations 테이블 적재 성공!")
+        print(f"[완료] Neon DB audit_recommendations 테이블 적재 성공! (타입: {rec_type})")
     except Exception as e:
         print(f"[오류] Neon DB audit_recommendations 적재 실패: {e}")
 
@@ -85,6 +90,8 @@ def main():
     parser.add_argument('json_file', help='추천 종목 JSON 파일 경로')
     parser.add_argument('--date', default=datetime.now().strftime('%Y-%m-%d'),
                         help='기준일 (기본값: 오늘, 형식: YYYY-MM-DD)')
+    parser.add_argument('--type', default='momentum', choices=['momentum', 'value'],
+                        help='추천 유형 (momentum 또는 value)')
     args = parser.parse_args()
 
     json_path = Path(args.json_file)
@@ -98,7 +105,7 @@ def main():
     if isinstance(records, dict) and 'stocks' in records:
         records = records['stocks']
 
-    save(records, args.date)
+    save(records, args.date, args.type)
 
 
 if __name__ == '__main__':
