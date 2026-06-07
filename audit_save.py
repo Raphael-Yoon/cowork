@@ -70,13 +70,13 @@ def save(records: list[dict], data_date: str, rec_type: str = 'momentum'):
             item_rec_type = r.get('rec_type', rec_type)
             cursor.execute("""
                 INSERT INTO audit_recommendations
-                    (code, name, current_price, target_price, upside, opinion, data_date, created_at, score, roe, debt, reason, news_summary, rec_type)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    (code, name, current_price, target_price, upside, opinion, data_date, created_at, score, roe, debt, reason, news_summary, rec_type, one_liner)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 r['code'], r['name'], float(r['current_price']), float(r['target_price']),
                 float(r['upside']), '', data_date, now_str, float(r['score']),
                 float(r.get('roe', 0)), float(r.get('debt', 0)), r.get('reason', ''), r.get('news_summary', ''),
-                item_rec_type
+                item_rec_type, r.get('one_liner', '')
             ))
         conn.commit()
         conn.close()
