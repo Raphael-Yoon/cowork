@@ -32,9 +32,11 @@
 
 | 스크립트 | 역할 |
 |---|---|
-| `trade/select_top_10.py` | pool → Top 10 자동 선정 (DART 직접 조회 포함) |
-| `cowork/pool_save.py` | AI가 결정한 pool 100건을 Neon stock_pool 테이블에 저장 |
-| `cowork/audit_save.py` | AI가 결정한 Top 10을 `recommendations.json`에 저장 |
+| `cowork/pool_collect.py` | 최신 엑셀 수집 및 필터링 후 pool 100건을 Neon stock_pool 테이블에 저장 |
+| `cowork/select_top_10.py` | pool → Top 10 수집 및 1차 필터링/최종 스코어링 |
+| `cowork/pool_save.py` | AI가 결정한 pool 100건을 Neon stock_pool 테이블에 저장 (수동 저장용) |
+| `cowork/audit_save.py` | AI가 결정한 Top 10을 Neon DB `audit_recommendations` 테이블에 저장 |
+
 
 ## 5. 환경 관리 원칙 (Local)
 
