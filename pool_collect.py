@@ -38,7 +38,7 @@ sys.path.append(str(TRADE_DIR))
 
 # 구글 드라이브 모듈 임포트
 try:
-    from drive_sync import list_files_in_folder, download_from_drive
+    from drive_sync import list_files_in_folder, read_sheet_as_df
 except ImportError:
     print("[오류] trade/drive_sync.py 모듈을 찾을 수 없습니다. 경로 설정을 확인하세요.")
     sys.exit(1)
@@ -91,49 +91,50 @@ def main():
         sys.exit(1)
 
     print("Step 1. 구글 드라이브에서 최신 재무 데이터 파일 조회 중...")
+    def load_local_fallback():
+        """cowork/Report/ → trade/result.xlsx 순으로 로컬 파일 탐색."""
+        report_dir = COWORK_DIR / 'Report'
+        local_xlsx = [f for f in report_dir.glob('*.xlsx')] if report_dir.exists() else []
+        if local_xlsx:
+            latest = max(local_xlsx, key=lambda f: f.stat().st_mtime)
+            print(f"로컬 폴백 작동: {latest} 사용")
+            return latest.read_bytes()
+        fallback = TRADE_DIR / 'result.xlsx'
+        if fallback.exists():
+            print(f"로컬 폴백 작동: {fallback} 사용")
+            return fallback.read_bytes()
+        print("[오류] 로컬 파일도 존재하지 않습니다.")
+        sys.exit(1)
+
+    import re
+    def extract_timestamp(file_obj):
+        name = file_obj.get('name', '')
+        m = re.search(r'(\d{8}_\d{6})', name)
+        if m: return m.group(1)
+        m = re.search(r'(\d{8})', name)
+        if m: return m.group(1) + "_000000"
+        return "00000000_000000"
+
+    df = None
     try:
         files = list_files_in_folder("Stock_Analysis_Results")
-    except Exception as e:
-        print(f"[오류] 구글 드라이브 연결 실패: {e}")
-        # 로컬 폴백 검색
-        print("로컬 폴백 작동: trade/result.xlsx 파일 사용 시도...")
-        local_path = TRADE_DIR / 'result.xlsx'
-        if not local_path.exists():
-            print("[오류] 로컬 result.xlsx 파일도 존재하지 않습니다.")
-            sys.exit(1)
-        with open(local_path, 'rb') as f:
-            content = f.read()
-    else:
-        # 스프레드시트 파일 필터링
         sheets = [f for f in files if f['mimeType'] == 'application/vnd.google-apps.spreadsheet' or f['name'].endswith('.xlsx')]
-        if not sheets:
-            print("[오류] 구글 드라이브 폴더 내에 재무 스프레드시트 파일이 없습니다.")
-            sys.exit(1)
-        
-        # 파일명에서 YYYYMMDD_HHMMSS 형태의 타임스탬프를 추출하여 최신 순으로 정렬
-        import re
-        def extract_timestamp(file_obj):
-            name = file_obj.get('name', '')
-            match = re.search(r'(\d{8}_\d{6})', name)
-            if match:
-                return match.group(1)
-            match_date = re.search(r'(\d{8})', name)
-            if match_date:
-                return match_date.group(1) + "_000000"
-            return "00000000_000000"
+        if sheets:
+            sheets.sort(key=extract_timestamp, reverse=True)
+            latest = sheets[0]
+            print(f"최신 파일 발견: {latest['name']}")
+            print("Step 2. Google Sheets 직접 읽기 중...")
+            df = read_sheet_as_df(latest['id'])
+        else:
+            print("[경고] 구글 드라이브에 파일 없음. 로컬 폴백 시도...")
+    except Exception as e:
+        print(f"[경고] 구글 드라이브 접근 실패: {e}. 로컬 폴백 시도...")
 
-        sheets.sort(key=extract_timestamp, reverse=True)
-        latest_sheet = sheets[0]
-        print(f"최신 파일 발견 (파일명 날짜 정렬): {latest_sheet['name']} (ID: {latest_sheet['id']})")
-        
-        print("Step 2. 최신 스프레드시트 다운로드 중...")
-        content = download_from_drive(latest_sheet['id'])
-        if not content:
-            print("[오류] 구글 드라이브 파일 다운로드 실패.")
-            sys.exit(1)
+    if df is None:
+        content = load_local_fallback()
+        df = pd.read_excel(io.BytesIO(content))
 
     print("Step 3. 데이터 로드 및 1차 필터링 시작...")
-    df = pd.read_excel(io.BytesIO(content))
     total_raw = len(df)
     print(f"로드된 전체 로우 수: {total_raw}개")
 
@@ -203,7 +204,58 @@ def main():
         sys.exit(0)
 
     # 섹터별 대장주 판별 (시가총액 기준 섹터 내 순위)
-    df['시가총액'] = pd.to_numeric(df['시가총액'] if '시가총액' in df.columns else 0, errors='coerce').fillna(0)
+    if '시가총액' in df.columns:
+        df['시가총액'] = pd.to_numeric(df['시가총액'], errors='coerce').fillna(0)
+    else:
+        df['시가총액'] = 0
+
+    # 시가총액이 0인 종목들 중 주요 대형주들이 누락되는 것을 막기 위해 네이버 금융 실시간 보완
+    missing_cap_mask = df['시가총액'] <= 0
+    missing_count = missing_cap_mask.sum()
+    if missing_count > 0:
+        print(f"  [안내] 시가총액이 0으로 누락된 {missing_count}개 종목에 대해 네이버 금융 실시간 보정 시도...")
+        import requests
+        from bs4 import BeautifulSoup
+        import re
+
+        def get_market_cap_live(code):
+            code_str = str(code).zfill(6)
+            url = f"https://finance.naver.com/item/main.naver?code={code_str}"
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            try:
+                res = requests.get(url, headers=headers, timeout=3)
+                soup = BeautifulSoup(res.text, 'html.parser')
+                for table in soup.find_all('table'):
+                    summary = table.get('summary', '')
+                    if '시가총액 정보' in summary:
+                        td = table.find('td')
+                        if td:
+                            td_text = td.get_text(strip=True).replace(',', '')
+                            val = 0
+                            m_cho = re.search(r'(\d+)조', td_text)
+                            m_uk = re.search(r'(\d+)억', td_text)
+                            if m_cho:
+                                val += int(m_cho.group(1)) * 1000000000000
+                            if m_uk:
+                                val += int(m_uk.group(1)) * 100000000
+                            if not m_cho and not m_uk:
+                                nums = re.findall(r'\d+', td_text)
+                                if nums:
+                                    val = int(nums[0])
+                            return float(val)
+            except Exception:
+                pass
+            return 0.0
+
+        # 시가총액 0인 종목들만 루프 돌며 데이터 수집
+        corrected = 0
+        for idx, row in df[missing_cap_mask].iterrows():
+            live_cap = get_market_cap_live(row['종목코드'])
+            if live_cap > 0:
+                df.at[idx, '시가총액'] = live_cap
+                corrected += 1
+        print(f"  [완료] {corrected}개 종목의 시가총액 데이터 보정 성공!")
+
     df['sector_cap_rank'] = df.groupby('업종')['시가총액'].transform(
         lambda x: x.where(x > 0).rank(method='first', ascending=False)
     ).fillna(999)
@@ -219,7 +271,17 @@ def main():
 
     # score 기준 내림차순 정렬 및 상위 100개 선정
     df_sorted = df.sort_values(by='pool_score', ascending=False)
-    df_pool = df_sorted.head(100)
+    df_top100 = df_sorted.head(100)
+    
+    # 100개에 포함되지 않은 대장주(is_sector_leader == True) 찾기
+    df_remaining = df_sorted.iloc[100:]
+    df_missing_leaders = df_remaining[df_remaining['is_sector_leader']]
+    
+    # 100개 풀과 누락 대장주 병합
+    df_pool = pd.concat([df_top100, df_missing_leaders], ignore_index=True)
+    
+    print(f"기본 스코어 상위 100개 선정 완료")
+    print(f"누락된 섹터 대장주 {len(df_missing_leaders)}개 추가 편입 완료")
     print(f"최종 선정된 Pool 종목 수: {len(df_pool)}개")
 
     # DB 적재 형식 구성

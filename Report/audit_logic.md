@@ -152,15 +152,15 @@ All items normalized to 0~100.
 
 ### STEP 2 — score (추천종목 선정용 - 유형별 이원화)
 
-최종 추천종목 선정은 목적에 따라 **대형가치주(Value) 스코어**와 **모멘텀 추천주(Momentum) 스코어**로 이원화하여 산출합니다.
+최종 추천종목 선정은 목적에 따라 **Value 스코어**와 **Momentum 스코어**로 이원화하여 산출합니다.
 
-#### A. 대형가치주 (Value) 스코어 (Low Risk)
+#### A. Value 스코어 (Low Risk)
 재무 안정성과 우량한 펀더멘탈을 중시하는 장기 우량주 선정 공식입니다. (국내 주식 시장 특성을 반영하여 배당 점수는 공식에서 제외되었습니다.)
 * **공식**:
   > Value Score = ROE점수 × 50% + 수급점수 × 30% + 뉴스심리점수 × 20% + 공시 가감점(+5 / -5)
 * **상승여력 필터**: **Upside 15% 이상 필수** (15% 미만인 종목은 자동 탈락하며, 스코어 점수 계산 자체에는 반영하지 않음)
 
-#### B. 모멘텀 추천주 (Momentum) 스코어 (High Risk)
+#### B. Momentum 스코어 (High Risk)
 단기 가격 탄력성과 뉴스/공시 모멘텀을 중시하는 단기 공격형 선정 공식입니다.
 * **공식**:
   > Momentum Score = 주가모멘텀점수 × 30% + 수급점수 × 30% + 뉴스심리점수 × 25% + 공시점수 × 10% + ROE점수 × 5%
@@ -206,12 +206,12 @@ All items normalized to 0~100.
 - **비중**: Value 15% / Momentum 25%
 
 #### 4-6. 추천 유형 분류 기준 (rec_type)
-최종 선정된 추천종목은 기업의 재무 상태와 시장 모멘텀 특성에 따라 아래와 같이 **모멘텀 추천주(momentum)**와 **대형가치주(value)**로 분류됩니다.
+최종 선정된 추천종목은 기업의 재무 상태와 시장 모멘텀 특성에 따라 아래와 같이 **Momentum(momentum)**과 **Value(value)**로 분류됩니다.
 
-* **모멘텀 추천주 (momentum)**:
+* **Momentum (momentum)**:
   - 시장의 단기 수급 및 가격 상승 추세가 강하여 단기 탄력이 기대되는 종목.
   - **판단 기준**: 주가 모멘텀(정배열 상태) 점수가 높거나, 최근 외인/기관의 순매수세가 연속적인 경우. 뉴스 심리가 매우 긍정적이며 체결강도가 강한 종목.
-* **대형가치주 (value)**:
+* **Value (value)**:
   - 재무 지표가 우수하여 기초체력(Fundamental)이 튼실하고, 상대적으로 저평가되어 큰 폭의 가격 회복이 기대되는 종목.
   - **판단 기준**: PBR이 낮고(예: PBR 10.0 이하), ROE가 높으며, 목표주가 대비 상승여력(Upside)이 충분한 종목(예: Upside 15% 이상). ※ 대형 우량주는 실적 개선 및 주가 상승으로 PBR이 높아지는 경향이 있어, 기존 3.0 기준에서 반도체, 조선, 방산 등의 핵심 대장주들을 포함하기 위해 10.0 이하로 상한을 완화하여 설정. PBR이 낮을수록 저평가로 우선 선정.
 
@@ -271,8 +271,8 @@ python cowork/audit_save.py recommendations.json
 | `reason` | 스코어 산출 근거 요약 |
 | `one_liner` | 한 줄 추천 코멘트 |
 | `rec_type` | 추천 유형 (`momentum` / `value`) |
-| `news_summary` | 선정 시점 수집 뉴스 목록 — **JSON 배열** `[{title, link, source, date}]` |
-| `disc_json` | 선정 시점 수집 공시 목록 — **JSON 배열** `[{report_nm, rcept_dt, rcept_no, flr_nm, corp_cls, rm}]` |
+| `news_summary` | 선정 시점 수집 뉴스 목록 — **JSON 배열** `[{title, link, source, date, sentiment, reason}]` (정성 평가에 따라 sentiment 및 판단 근거 reason 포함) |
+| `disc_json` | 선정 시점 수집 공시 목록 — **JSON 배열** `[{report_nm, rcept_dt, rcept_no, flr_nm, corp_cls, rm, sentiment, reason}]` (정성 평가에 따라 sentiment 및 판단 근거 reason 포함) |
 | `data_date` | 기준일 (`YYYY-MM-DD`) |
 | `created_at` | 저장 시각 (`YYYY-MM-DD HH:MM:SS`) |
 
@@ -280,5 +280,6 @@ python cowork/audit_save.py recommendations.json
 
 ---
 
+**작업 요약**: 
+* **최종 수정일**: 2026-06-14 (뉴스/공시 정성 평가 근거 저장 기준 수립 — `news_summary` 및 `disc_json` 내 개별 항목에 `sentiment` 및 `reason` 필드 추가, UI 마우스 오버(Hover) 시 설명 노출 연동)
 **작성자**: IT 감사팀장 서화진  
-**최종 수정일**: 2026-06-14 (섹터별 대장주 판별 로직 추가 — 시가총액 기반 `is_sector_leader` 플래그 및 pool_score 10% 반영, stock_pool 테이블 `market_cap`·`is_sector_leader` 컬럼 추가)

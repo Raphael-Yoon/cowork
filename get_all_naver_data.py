@@ -634,6 +634,9 @@ def get_extra_stock_data(ticker, name, headers, data):
             if '날짜' in table.get_text() and '기관' in table.get_text():
                 rows = table.select('tr[onmouseover]')
                 f_5d, f_20d, i_5d, i_20d = 0, 0, 0, 0
+                f_5d_weighted, i_5d_weighted = 0.0, 0.0
+                f_today, i_today = 0, 0
+                weights = [0.45, 0.25, 0.15, 0.10, 0.05]
                 for i, row in enumerate(rows):
                     tds = row.find_all('td')
                     if len(tds) >= 9:
@@ -641,9 +644,16 @@ def get_extra_stock_data(ticker, name, headers, data):
                             i_val = int(re.sub(r'[^0-9\-]', '', tds[5].get_text(strip=True) or '0'))
                             f_val = int(re.sub(r'[^0-9\-]', '', tds[6].get_text(strip=True) or '0'))
                             
+                            if i == 0:
+                                f_today = f_val
+                                i_today = i_val
+                            
                             if i < 5:
                                 f_5d += f_val
                                 i_5d += i_val
+                                if i < len(weights):
+                                    f_5d_weighted += f_val * weights[i]
+                                    i_5d_weighted += i_val * weights[i]
                             if i < 20:
                                 f_20d += f_val
                                 i_20d += i_val
@@ -653,6 +663,10 @@ def get_extra_stock_data(ticker, name, headers, data):
                 extra['foreign_20d_net'] = f_20d
                 extra['inst_5d_net'] = i_5d
                 extra['inst_20d_net'] = i_20d
+                extra['foreign_5d_weighted'] = round(f_5d_weighted, 2)
+                extra['inst_5d_weighted'] = round(i_5d_weighted, 2)
+                extra['foreign_today_net'] = f_today
+                extra['inst_today_net'] = i_today
                 break
 
         # 2. 뉴스 검색 (news_search.naver)

@@ -38,6 +38,25 @@ except ImportError:
 
 
 
+def parse_market_cap(cap_str):
+    if not cap_str or cap_str == 'N/A':
+        return 0.0
+    import re
+    s = str(cap_str).replace(',', '').strip()
+    val = 0.0
+    m_cho = re.search(r'(\d+)조', s)
+    m_uk = re.search(r'(\d+)억', s)
+    if m_cho:
+        val += float(m_cho.group(1)) * 1000000000000
+    if m_uk:
+        val += float(m_uk.group(1)) * 100000000
+    if not m_cho and not m_uk:
+        nums = re.findall(r'\d+', s)
+        if nums:
+            val = float(nums[0])
+    return val
+
+
 def collect_candidate(cand, pool, dart_key):
     """종목 1개의 시장 데이터·뉴스·공시를 수집하여 반환."""
     code = cand['code']
@@ -66,6 +85,10 @@ def collect_candidate(cand, pool, dart_key):
 
     ma5_diff  = naver_data.get('ma5_diff', 0.0)
     ma20_diff = naver_data.get('ma20_diff', 0.0)
+
+    # Hard Filter: 단기 하락 추세(역배열) 제외
+    if ma5_diff <= 0 and ma20_diff <= 0:
+        return None
 
     # DART 공시 수집 (최근 30일)
     disclosures = []
@@ -115,11 +138,17 @@ def collect_candidate(cand, pool, dart_key):
         'ma20_diff':     round(ma20_diff, 2),
         'foreign_5d_net': naver_data.get('foreign_5d_net', 0),
         'inst_5d_net':    naver_data.get('inst_5d_net', 0),
+        'foreign_5d_weighted': naver_data.get('foreign_5d_weighted', 0.0),
+        'inst_5d_weighted':    naver_data.get('inst_5d_weighted', 0.0),
+        'foreign_today_net':   naver_data.get('foreign_today_net', 0),
+        'inst_today_net':      naver_data.get('inst_today_net', 0),
         'price_position_52w': naver_data.get('price_position_52w', 50.0),
         'pbr':           naver_data.get('pbr', 0.0),
         'dividend_yield': naver_data.get('dividend_yield', 0.0),
         'news':          news,
         'disclosures':   disclosures,
+        'is_sector_leader': cand.get('is_sector_leader', False),
+        'market_cap':    parse_market_cap(naver_data.get('market_cap', 'N/A')),
     }
 
 
@@ -131,13 +160,17 @@ def run_collection():
 
     conn   = psycopg2.connect(database_url, cursor_factory=psycopg2.extras.DictCursor)
     cursor = conn.cursor()
-    cursor.execute("SELECT code, name, roe, debt_ratio FROM stock_pool")
+    cursor.execute("SELECT code, name, roe, debt_ratio, is_sector_leader, market_cap FROM stock_pool")
     rows = cursor.fetchall()
     conn.close()
 
     pool       = [{'code': r['code'], 'name': r['name'],
-                   'roe': r['roe'] or 0.0, 'debt': r['debt_ratio'] or 0.0} for r in rows]
-    candidates = [{'code': r['code'], 'name': r['name']} for r in rows]
+                   'roe': r['roe'] or 0.0, 'debt': r['debt_ratio'] or 0.0,
+                   'is_sector_leader': bool(r['is_sector_leader']),
+                   'market_cap': r['market_cap'] or 0.0} for r in rows]
+    candidates = [{'code': r['code'], 'name': r['name'],
+                   'is_sector_leader': bool(r['is_sector_leader']),
+                   'market_cap': r['market_cap'] or 0.0} for r in rows]
 
     # 중복 제거
     seen = set()
@@ -191,4 +224,146 @@ def run_collection():
 
 
 if __name__ == '__main__':
-    run_collection()
+    results = run_collection()
+    
+    # ai_evaluations.json 로드 시도
+    ai_eval_path = COWORK_DIR / "ai_evaluations.json"
+    ai_evals = {}
+    if ai_eval_path.exists():
+        try:
+            with open(ai_eval_path, encoding='utf-8') as f:
+                data = json.load(f)
+                # 배열 형식인 경우 딕셔너리로 변환
+                if isinstance(data, list):
+                    ai_evals = {item["code"]: item for item in data}
+                else:
+                    ai_evals = data
+            print(f"  [안내] {ai_eval_path.name} 로드 완료. AI 정성 점수를 계산에 반영합니다.")
+        except Exception as e:
+            print(f"  [경고] AI 평가 파일 로드 실패: {e}")
+    else:
+        print(f"  [안내] {ai_eval_path.name} 파일이 존재하지 않아 기본값(뉴스 60점, 공시 중립)을 적용합니다.")
+
+    value_list = []
+    momentum_list = []
+
+    for r in results:
+        code = r["code"]
+        ae = ai_evals.get(code, {
+            "news_sentiment_score": 60,
+            "disclosure_sentiment": "중립/없음",
+            "one_liner": f"{r['name']} 우량 종목 분석 및 공략"
+        })
+
+        # 정규화 항목 계산
+        roe_score = min(max(r["roe"], 0) * 2.0, 100.0)
+        price_mom_score = r["price_position_52w"]
+
+        # 수급 점수 계산 (흐름 기반: 5일 가중합이 양수이거나 최신일 순매수가 양수인 경우 매수 흐름으로 판정)
+        f_weighted = r.get("foreign_5d_weighted", 0.0)
+        i_weighted = r.get("inst_5d_weighted", 0.0)
+        f_today = r.get("foreign_today_net", 0)
+        i_today = r.get("inst_today_net", 0)
+
+        f_flow = (f_weighted > 0) or (f_today > 0)
+        i_flow = (i_weighted > 0) or (i_today > 0)
+
+        if f_flow and i_flow:
+            supply_score = 100.0
+            supply_text = "외인+/기관+ (흐름)"
+        elif f_flow and not i_flow:
+            supply_score = 70.0
+            supply_text = "외인+/기관- (흐름)"
+        elif not f_flow and i_flow:
+            supply_score = 40.0
+            supply_text = "외인-/기관+ (흐름)"
+        else:
+            supply_score = 10.0
+            supply_text = "외인-/기관- (흐름)"
+
+        news_score = ae.get("news_sentiment_score", 60)
+
+        # 공시 모멘텀 가감점 및 점수
+        disc_sent = ae.get("disclosure_sentiment", "중립/없음")
+        if disc_sent == "호재":
+            value_disc_adj = 5.0
+            mom_disc_score = 100.0
+        elif disc_sent == "악재":
+            value_disc_adj = -5.0
+            mom_disc_score = 0.0
+        else:
+            value_disc_adj = 0.0
+            mom_disc_score = 50.0
+
+        # A. Value 스코어 계산 (배당 제외, 섹터 대장주 가점 차등 부여)
+        val_score = (roe_score * 0.50) + (supply_score * 0.30) + (news_score * 0.20) + value_disc_adj
+        if r.get("is_sector_leader", False):
+            # 동일 업종 내에서 실시간 시가총액 기준으로 1위인 종목은 +20점, 2~3위는 +15점 가산
+            same_sector_caps = [x.get('market_cap', 0.0) for x in results if x['sector'] == r['sector']]
+            same_sector_caps.sort(reverse=True)
+            try:
+                rank_in_pool = same_sector_caps.index(r.get('market_cap', 0.0)) + 1
+            except ValueError:
+                rank_in_pool = 999
+            
+            if rank_in_pool == 1:
+                val_score += 20.0
+            else:
+                val_score += 15.0
+        val_score = round(val_score, 2)
+
+        # B. Momentum 스코어 계산
+        mom_score = (price_mom_score * 0.30) + (supply_score * 0.30) + (news_score * 0.25) + (mom_disc_score * 0.10) + (roe_score * 0.05)
+        mom_score = round(mom_score, 2)
+
+        reason = f"[{r['sector']}] 뉴스:{news_score}점 | ROE {r['roe']:.1f}% | 수급 {supply_text} | 상승여력 {r['upside']}%"
+        if r.get("is_sector_leader", False):
+            reason += " | [섹터대장주]"
+
+        record_base = {
+            "code": r["code"],
+            "name": r["name"],
+            "current_price": r["current_price"],
+            "target_price": r["target_price"],
+            "upside": r["upside"],
+            "roe": r["roe"],
+            "debt": r["debt"],
+            "market_cap": r["market_cap"],
+            "one_liner": ae.get("one_liner", f"{r['name']} 우량 종목 분석 및 공략"),
+            "reason": reason,
+            "news_summary": json.dumps(ae.get("news", []), ensure_ascii=False),
+            "disc_json": json.dumps(ae.get("disclosures", []), ensure_ascii=False)
+        }
+
+        # Value: Upside >= 15% and PBR <= 10.0 (with valid PBR > 0)
+        if r["upside"] >= 15.0 and 0 < r["pbr"] <= 10.0:
+            rec_val = record_base.copy()
+            rec_val["score"] = val_score
+            rec_val["rec_type"] = "value"
+            value_list.append(rec_val)
+
+        # Momentum: Upside >= 30%
+        if r["upside"] >= 30.0:
+            rec_mom = record_base.copy()
+            rec_mom["score"] = mom_score
+            rec_mom["rec_type"] = "momentum"
+            momentum_list.append(rec_mom)
+
+    value_list.sort(key=lambda x: x["score"], reverse=True)
+    momentum_list.sort(key=lambda x: x["score"], reverse=True)
+
+    top_value = value_list[:10]
+    top_momentum = momentum_list[:10]
+
+    # JSON 저장
+    with open(COWORK_DIR / "value_recommendations.json", "w", encoding="utf-8") as f:
+        json.dump(top_value, f, ensure_ascii=False, indent=2)
+
+    with open(COWORK_DIR / "momentum_recommendations.json", "w", encoding="utf-8") as f:
+        json.dump(top_momentum, f, ensure_ascii=False, indent=2)
+
+    print(f"\n{'='*60}")
+    print("최종 추천 리스트 산출 완료!")
+    print(f"  - Value: {len(top_value)}개 종목 value_recommendations.json 저장 완료")
+    print(f"  - Momentum: {len(top_momentum)}개 종목 momentum_recommendations.json 저장 완료")
+    print(f"{'='*60}\n")

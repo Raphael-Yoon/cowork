@@ -1,0 +1,107 @@
+[ 1] 성호전자 | Score: 112.0 | Upside: 114.4% | PBR: 5.69 | ROE: 113.32% | Leader: True
+[ 2] SK바이오팜 | Score: 103.52 | Upside: 68.8% | PBR: 7.39 | ROE: 46.52% | Leader: True
+[ 3] SK하이닉스 | Score: 98.0 | Upside: 28.0% | PBR: 9.04 | ROE: 61.16% | Leader: True
+[ 4] 파미셀 | Score: 95.45 | Upside: 60.0% | PBR: 6.64 | ROE: 38.45% | Leader: True
+[ 5] 실리콘투 | Score: 88.96 | Upside: 68.8% | PBR: 4.61 | ROE: 44.96% | Leader: True
+[ 6] 이크레더블 | Score: 88.95 | Upside: 47.2% | PBR: 5.18 | ROE: 40.95% | Leader: True
+[ 7] 현대로템 | Score: 87.08 | Upside: 49.6% | PBR: 7.07 | ROE: 30.08% | Leader: True
+[ 8] 한화에어로스페이스 | Score: 84.74 | Upside: 69.9% | PBR: 5.57 | ROE: 22.74% | Leader: True
+[ 9] 코나아이 | Score: 82.64 | Upside: 93.2% | PBR: 2.71 | ROE: 38.64% | Leader: True
+[10] 삼양식품 | Score: 81.95 | Upside: 62.9% | PBR: 6.21 | ROE: 37.95% | Leader: True
+[11] 삼성전자 | Score: 81.16 | Upside: 35.7% | PBR: 4.48 | ROE: 19.16% | Leader: True
+[12] SOOP | Score: 81.09 | Upside: 56.1% | PBR: 1.12 | ROE: 24.09% | Leader: True
+[13] DB손해보험 | Score: 81.02 | Upside: 47.1% | PBR: 0.78 | ROE: 19.02% | Leader: True
+[14] 파마리서치 | Score: 80.99 | Upside: 70.3% | PBR: 4.8 | ROE: 27.99% | Leader: True
+[15] 메가스터디교육 | Score: 80.39 | Upside: 48.5% | PBR: 0.86 | ROE: 18.39% | Leader: True
+[16] 한국콜마 | Score: 80.19 | Upside: 41.0% | PBR: 2.18 | ROE: 18.19% | Leader: True
+[17] 메리츠금융지주 | Score: 80.05 | Upside: 35.9% | PBR: 1.68 | ROE: 23.05% | Leader: True
+[18] 디케이티 | Score: 78.09 | Upside: 60.4% | PBR: 1.91 | ROE: 16.09% | Leader: True
+[19] SNT에너지 | Score: 77.48 | Upside: 96.4% | PBR: 1.71 | ROE: 29.48% | Leader: True
+[20] KCC | Score: 76.84 | Upside: 44.3% | PBR: 0.46 | ROE: 23.84% | Leader: True
+[21] 효성 | Score: 76.53 | Upside: 84.9% | PBR: 1.22 | ROE: 14.53% | Leader: True
+[22] 경동나비엔 | Score: 76.22 | Upside: 46.1% | PBR: 1.21 | ROE: 14.22% | Leader: True
+[23] NC | Score: 76.0 | Upside: 42.3% | PBR: 1.45 | ROE: 14.0% | Leader: True
+[24] 영원무역 | Score: 75.88 | Upside: 45.4% | PBR: 0.82 | ROE: 13.88% | Leader: True
+[25] SK가스 | Score: 75.79 | Upside: 65.3% | PBR: 0.63 | ROE: 13.79% | Leader: True
+[26] KT&G | Score: 75.25 | Upside: 15.9% | PBR: 2.1 | ROE: 13.25% | Leader: True
+[27] 지역난방공사 | Score: 75.14 | Upside: 81.8% | PBR: 0.34 | ROE: 13.14% | Leader: True
+[28] 인카금융서비스 | Score: 74.49 | Upside: 22.4% | PBR: 2.18 | ROE: 41.49% | Leader: False
+[29] JYP Ent. | Score: 74.29 | Upside: 62.7% | PBR: 2.96 | ROE: 21.29% | Leader: True
+[30] 금호타이어 | Score: 74.1 | Upside: 67.5% | PBR: 0.61 | ROE: 17.1% | Leader: True
+[31] 기아 | Score: 73.9 | Upside: 36.3% | PBR: 1.05 | ROE: 11.9% | Leader: True
+[32] 펄어비스 | Score: 73.85 | Upside: 77.7% | PBR: 2.63 | ROE: 16.85% | Leader: True
+[33] 쏠리드 | Score: 72.97 | Upside: 113.7% | PBR: 2.05 | ROE: 15.97% | Leader: True
+[34] 삼성바이오로직스 | Score: 72.56 | Upside: 60.9% | PBR: 7.56 | ROE: 19.56% | Leader: True
+[35] NICE평가정보 | Score: 72.33 | Upside: 36.7% | PBR: 1.86 | ROE: 19.33% | Leader: True
+[36] KB금융 | Score: 72.25 | Upside: 26.3% | PBR: 0.96 | ROE: 10.25% | Leader: True
+[37] 한글과컴퓨터 | Score: 71.42 | Upside: 72.5% | PBR: 1.3 | ROE: 9.42% | Leader: True
+[38] 한국타이어앤테크놀로지 | Score: 71.35 | Upside: 18.1% | PBR: 0.69 | ROE: 9.35% | Leader: True
+[39] HJ중공업 | Score: 70.69 | Upside: 82.9% | PBR: 2.81 | ROE: 13.69% | Leader: True
+[40] 현대그린푸드 | Score: 70.61 | Upside: 40.6% | PBR: 0.76 | ROE: 13.61% | Leader: True
+[41] 나이스디앤비 | Score: 70.01 | Upside: 26.8% | PBR: 0.75 | ROE: 13.01% | Leader: True
+[42] 에프엔에스테크 | Score: 69.36 | Upside: 39.2% | PBR: 1.85 | ROE: 12.36% | Leader: True
+[43] 전진건설로봇 | Score: 69.25 | Upside: 19.8% | PBR: 5.44 | ROE: 21.25% | Leader: True
+[44] HD현대중공업 | Score: 68.55 | Upside: 40.2% | PBR: 7.02 | ROE: 24.55% | Leader: True
+[45] 한솔로지스틱스 | Score: 67.98 | Upside: 59.3% | PBR: 0.55 | ROE: 10.98% | Leader: True
+[46] F&F | Score: 67.82 | Upside: 15.0% | PBR: 1.63 | ROE: 28.82% | Leader: True
+[47] HD현대마린엔진 | Score: 67.41 | Upside: 97.2% | PBR: 4.48 | ROE: 43.41% | Leader: False
+[48] PI첨단소재 | Score: 67.19 | Upside: 41.5% | PBR: 1.97 | ROE: 10.19% | Leader: True
+[49] 덕산네오룩스 | Score: 66.96 | Upside: 74.2% | PBR: 1.92 | ROE: 13.96% | Leader: True
+[50] 클래시스 | Score: 66.42 | Upside: 77.9% | PBR: 5.49 | ROE: 27.42% | Leader: True
+[51] 디어유 | Score: 65.3 | Upside: 101.8% | PBR: 2.64 | ROE: 12.3% | Leader: True
+[52] 대한조선 | Score: 65.23 | Upside: 115.5% | PBR: 2.09 | ROE: 32.23% | Leader: False
+[53] 풍산 | Score: 65.13 | Upside: 92.0% | PBR: 0.86 | ROE: 8.13% | Leader: True
+[54] SAMG엔터 | Score: 65.0 | Upside: 113.2% | PBR: 3.0 | ROE: 50.06% | Leader: False
+[55] 엠앤씨솔루션 | Score: 64.94 | Upside: 67.6% | PBR: 4.6 | ROE: 25.94% | Leader: True
+[56] 한화오션 | Score: 64.71 | Upside: 51.1% | PBR: 5.06 | ROE: 25.71% | Leader: True
+[57] 휴젤 | Score: 64.39 | Upside: 55.1% | PBR: 2.63 | ROE: 16.39% | Leader: True
+[58] 와이지엔터테인먼트 | Score: 64.31 | Upside: 64.1% | PBR: 1.66 | ROE: 7.31% | Leader: True
+[59] GKL | Score: 63.83 | Upside: 35.3% | PBR: 1.72 | ROE: 10.83% | Leader: True
+[60] 고려아연 | Score: 63.39 | Upside: 58.5% | PBR: 2.18 | ROE: 10.39% | Leader: True
+[61] 모두투어 | Score: 62.77 | Upside: 52.7% | PBR: 1.81 | ROE: 14.77% | Leader: True
+[62] 온코닉테라퓨틱스 | Score: 62.48 | Upside: 91.0% | PBR: 8.87 | ROE: 29.48% | Leader: False
+[63] RFHIC | Score: 62.39 | Upside: 72.2% | PBR: 5.41 | ROE: 9.39% | Leader: True
+[64] SK | Score: 62.29 | Upside: 30.2% | PBR: 1.1 | ROE: 9.29% | Leader: True
+[65] 티앤엘 | Score: 61.98 | Upside: 45.2% | PBR: 2.27 | ROE: 19.98% | Leader: False
+[66] 에스엘 | Score: 61.92 | Upside: 35.9% | PBR: 1.21 | ROE: 13.92% | Leader: True
+[67] 에스엠 | Score: 61.78 | Upside: 54.0% | PBR: 1.91 | ROE: 13.78% | Leader: True
+[68] 노바렉스 | Score: 61.74 | Upside: 79.6% | PBR: 0.99 | ROE: 17.74% | Leader: True
+[69] 미래에셋증권 | Score: 61.73 | Upside: 48.7% | PBR: 2.3 | ROE: 8.73% | Leader: True
+[70] 현대글로비스 | Score: 61.34 | Upside: 55.6% | PBR: 1.51 | ROE: 17.34% | Leader: True
+[71] 한국금융지주 | Score: 60.86 | Upside: 43.3% | PBR: 1.1 | ROE: 21.86% | Leader: True
+[72] RF머트리얼즈 | Score: 60.73 | Upside: 123.5% | PBR: 9.98 | ROE: 18.73% | Leader: False
+[73] 하이록코리아 | Score: 60.25 | Upside: 54.5% | PBR: 0.88 | ROE: 12.25% | Leader: True
+[74] 이녹스첨단소재 | Score: 59.98 | Upside: 55.7% | PBR: 1.31 | ROE: 11.98% | Leader: True
+[75] LS에코에너지 | Score: 59.67 | Upside: 32.7% | PBR: 8.15 | ROE: 20.67% | Leader: True
+[76] HD한국조선해양 | Score: 59.2 | Upside: 49.0% | PBR: 2.08 | ROE: 20.2% | Leader: True
+[77] 디지털대성 | Score: 59.07 | Upside: 45.8% | PBR: 1.58 | ROE: 20.07% | Leader: True
+[78] 오리온 | Score: 58.85 | Upside: 32.0% | PBR: 1.37 | ROE: 10.85% | Leader: True
+[79] 코리안리 | Score: 58.76 | Upside: 20.3% | PBR: 0.63 | ROE: 10.76% | Leader: True
+[80] 한솔케미칼 | Score: 58.54 | Upside: 36.1% | PBR: 2.79 | ROE: 14.54% | Leader: True
+[81] S-Oil | Score: 58.35 | Upside: 29.4% | PBR: 1.36 | ROE: 10.35% | Leader: True
+[82] 제일기획 | Score: 58.28 | Upside: 24.3% | PBR: 1.36 | ROE: 14.28% | Leader: True
+[83] 네오팜 | Score: 58.12 | Upside: 45.9% | PBR: 1.39 | ROE: 16.12% | Leader: False
+[84] 삼성E&A | Score: 57.69 | Upside: 39.5% | PBR: 1.94 | ROE: 13.69% | Leader: True
+[85] 삼양엔씨켐 | Score: 56.45 | Upside: 68.1% | PBR: 3.05 | ROE: 14.45% | Leader: False
+[86] KT밀리의서재 | Score: 55.52 | Upside: 69.2% | PBR: 1.06 | ROE: 20.52% | Leader: True
+[87] 브이티 | Score: 55.41 | Upside: 59.2% | PBR: 1.71 | ROE: 22.41% | Leader: False
+[88] HD현대에너지솔루션 | Score: 55.07 | Upside: 68.1% | PBR: 3.83 | ROE: 16.07% | Leader: True
+[89] 이랜텍 | Score: 54.58 | Upside: 103.6% | PBR: 0.77 | ROE: 15.58% | Leader: True
+[90] 씨에스윈드 | Score: 53.0 | Upside: 92.5% | PBR: 1.43 | ROE: -1.42% | Leader: True
+[91] 아스테라시스 | Score: 52.29 | Upside: 89.4% | PBR: 6.37 | ROE: 19.29% | Leader: False
+[92] 인텔리안테크 | Score: 52.28 | Upside: 72.6% | PBR: 3.83 | ROE: 13.28% | Leader: True
+[93] HD건설기계 | Score: 51.66 | Upside: 63.9% | PBR: 1.45 | ROE: 7.66% | Leader: True
+[94] JB금융지주 | Score: 51.37 | Upside: 41.2% | PBR: 0.84 | ROE: 12.37% | Leader: True
+[95] 미스토홀딩스 | Score: 50.6 | Upside: 36.7% | PBR: 1.12 | ROE: 11.6% | Leader: True
+[96] 이노션 | Score: 50.06 | Upside: 20.5% | PBR: 0.77 | ROE: 11.06% | Leader: True
+[97] 한전기술 | Score: 49.65 | Upside: 37.5% | PBR: 9.78 | ROE: 5.65% | Leader: True
+[98] 세진중공업 | Score: 48.76 | Upside: 90.6% | PBR: 3.65 | ROE: 24.76% | Leader: False
+[99] 펌텍코리아 | Score: 47.81 | Upside: 42.0% | PBR: 1.52 | ROE: 12.81% | Leader: True
+[100] 키움증권 | Score: 45.51 | Upside: 54.3% | PBR: 1.38 | ROE: 21.51% | Leader: False
+[101] 엠씨넥스 | Score: 42.14 | Upside: 52.5% | PBR: 0.88 | ROE: 12.14% | Leader: True
+[102] 웹케시 | Score: 42.04 | Upside: 97.0% | PBR: 0.74 | ROE: 12.04% | Leader: True
+[103] 한국카본 | Score: 41.85 | Upside: 80.3% | PBR: 2.7 | ROE: 17.85% | Leader: False
+[104] 티씨케이 | Score: 38.57 | Upside: 27.2% | PBR: 6.14 | ROE: 14.57% | Leader: False
+[105] ISC | Score: 37.23 | Upside: 26.1% | PBR: 8.68 | ROE: 13.23% | Leader: False
+[106] 대우건설 | Score: 30.0 | Upside: 58.4% | PBR: 2.5 | ROE: -19.5% | Leader: True
+[107] 씨엠티엑스 | Score: 24.0 | Upside: 69.1% | PBR: 5.9 | ROE: -19.84% | Leader: False
