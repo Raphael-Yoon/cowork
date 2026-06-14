@@ -50,13 +50,14 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 def calculate_pool_score(row):
     """
     pool_score 계산식:
-    pool_score = (ROE * 0.4) + (부채건전성 * 0.3) + (목표주가 보유 * 0.2) + (업종 가중치 * 0.1)
+    pool_score = (ROE * 0.35) + (부채건전성 * 0.25) + (목표주가 보유 * 0.2) + (업종 가중치 * 0.1) + (섹터 대장주 * 0.1)
     각 항목은 0~100점 범위로 정규화
     """
     roe = float(row.get('ROE', 0))
     debt = float(row.get('부채비율', 0))
     target_price = float(row.get('목표주가', 0))
     sector = str(row.get('업종', ''))
+    sector_leader_score = float(row.get('sector_leader_score', 0))
 
     # 1. ROE 점수 (50% 이상 시 100점 만점)
     roe_score = min(max(roe, 0) * 2.0, 100.0)
@@ -64,7 +65,7 @@ def calculate_pool_score(row):
     # 2. 부채건전성 점수 (금융업: 70점 고정, 고부채 업종: 0~300% 기준 정규화, 일반 업종: 0~150% 기준 정규화)
     is_financial = any(s in sector for s in ['은행', '증권', '보험', '손해보험', '생명보험'])
     is_high_leverage = any(s in sector for s in ['건설', '조선', '해운', '항공', '전력', '가스', '에너지', '유틸리티', '운송'])
-    
+
     if is_financial:
         debt_score = 70.0
     elif is_high_leverage:
@@ -80,8 +81,8 @@ def calculate_pool_score(row):
     is_strategic = any(s in sector for s in strategic_sectors)
     sector_score = 100.0 if is_strategic else 80.0
 
-    # 종합 스코어 계산
-    final_score = (roe_score * 0.4) + (debt_score * 0.3) + (target_score * 0.2) + (sector_score * 0.1)
+    # 종합 스코어 계산 (섹터 대장주 10% 반영)
+    final_score = (roe_score * 0.35) + (debt_score * 0.25) + (target_score * 0.2) + (sector_score * 0.1) + (sector_leader_score * 0.1)
     return round(final_score, 2)
 
 def main():
@@ -148,7 +149,8 @@ def main():
         'PER': 'per',
         '영업이익률': 'operating_margin',
         '외국인순매수': 'foreign_net_buy',
-        '기관순매수': 'inst_net_buy'
+        '기관순매수': 'inst_net_buy',
+        '시가총액': 'market_cap',
     }
 
     # 현재 엑셀 컬럼이 변형되었을 경우를 대비해 매핑 유효성 검사
@@ -200,6 +202,18 @@ def main():
         print("[경고] 필터를 통과한 종목이 하나도 없습니다. 수집을 중단합니다.")
         sys.exit(0)
 
+    # 섹터별 대장주 판별 (시가총액 기준 섹터 내 순위)
+    df['시가총액'] = pd.to_numeric(df['시가총액'] if '시가총액' in df.columns else 0, errors='coerce').fillna(0)
+    df['sector_cap_rank'] = df.groupby('업종')['시가총액'].transform(
+        lambda x: x.where(x > 0).rank(method='first', ascending=False)
+    ).fillna(999)
+    df['is_sector_leader'] = df['sector_cap_rank'] <= 3
+    df['sector_leader_score'] = df['sector_cap_rank'].apply(
+        lambda r: 100.0 if r == 1 else (60.0 if r <= 3 else 0.0)
+    )
+    leader_count = df['is_sector_leader'].sum()
+    print(f"섹터 대장주 판별 완료: {leader_count}개 종목 (시총 1위={df[df['sector_cap_rank']==1].shape[0]}개, 2~3위={df[df['sector_cap_rank'].between(2,3)].shape[0]}개)")
+
     # pool_score 계산 및 추가
     df['pool_score'] = df.apply(calculate_pool_score, axis=1)
 
@@ -223,7 +237,9 @@ def main():
             'target_price': float(row.get('목표주가', 0)),
             'foreign_net_buy': float(row.get('외국인순매수', 0)) if pd.notna(row.get('외국인순매수')) else 0.0,
             'inst_net_buy': float(row.get('기관순매수', 0)) if pd.notna(row.get('기관순매수')) else 0.0,
-            'pool_score': float(row['pool_score'])
+            'pool_score': float(row['pool_score']),
+            'market_cap': float(row.get('시가총액', 0)) if pd.notna(row.get('시가총액')) else 0.0,
+            'is_sector_leader': bool(row.get('is_sector_leader', False)),
         })
 
     # Neon PostgreSQL 적재
@@ -235,6 +251,11 @@ def main():
         conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.DictCursor)
         cur = conn.cursor()
 
+        # 신규 컬럼 마이그레이션 (없으면 추가)
+        cur.execute("ALTER TABLE stock_pool ADD COLUMN IF NOT EXISTS market_cap FLOAT DEFAULT 0")
+        cur.execute("ALTER TABLE stock_pool ADD COLUMN IF NOT EXISTS is_sector_leader BOOLEAN DEFAULT FALSE")
+        conn.commit()
+
         # 기존 테이블 비우기
         cur.execute("TRUNCATE TABLE stock_pool")
 
@@ -242,16 +263,18 @@ def main():
             cur.execute("""
                 INSERT INTO stock_pool
                     (code, name, sector, roe, pbr, per, debt_ratio, operating_margin,
-                     target_price, foreign_net_buy, inst_net_buy, pool_score, data_date, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                     target_price, foreign_net_buy, inst_net_buy, pool_score,
+                     market_cap, is_sector_leader, data_date, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (code) DO UPDATE SET
                     name=EXCLUDED.name, sector=EXCLUDED.sector,
                     roe=EXCLUDED.roe, pbr=EXCLUDED.pbr, per=EXCLUDED.per,
                     debt_ratio=EXCLUDED.debt_ratio, operating_margin=EXCLUDED.operating_margin,
                     target_price=EXCLUDED.target_price,
                     foreign_net_buy=EXCLUDED.foreign_net_buy, inst_net_buy=EXCLUDED.inst_net_buy,
-                    pool_score=EXCLUDED.pool_score, data_date=EXCLUDED.data_date,
-                    updated_at=EXCLUDED.updated_at
+                    pool_score=EXCLUDED.pool_score,
+                    market_cap=EXCLUDED.market_cap, is_sector_leader=EXCLUDED.is_sector_leader,
+                    data_date=EXCLUDED.data_date, updated_at=EXCLUDED.updated_at
             """, (
                 r['code'], r['name'], r['sector'],
                 r['roe'], r['pbr'], r['per'],
@@ -259,6 +282,7 @@ def main():
                 r['target_price'],
                 r['foreign_net_buy'], r['inst_net_buy'],
                 r['pool_score'],
+                r['market_cap'], r['is_sector_leader'],
                 data_date, now_str
             ))
 

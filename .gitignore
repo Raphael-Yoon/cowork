@@ -11,8 +11,6 @@ credentials.json
 # 산출물 및 임시 파일
 scratch/
 *.xlsx
-recommendations.json
-recommendations.json.bak
 quiz/
 *.md.bak
 

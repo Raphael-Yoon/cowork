@@ -37,7 +37,6 @@
 | `cowork/pool_save.py` | AI가 결정한 pool 100건을 Neon stock_pool 테이블에 저장 (수동 저장용) |
 | `cowork/audit_save.py` | AI가 결정한 Top 10을 Neon DB `audit_recommendations` 테이블에 저장 |
 
-
 ## 5. 환경 관리 원칙 (Local)
 
 - **보존 대상**: `Evidence/` 폴더 전체, `Paper/` 원본 엑셀 조서, `RCM/` 폴더
