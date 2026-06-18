@@ -57,11 +57,11 @@ def save(records: list[dict], data_date: str):
     cur = conn.cursor()
 
     # 기존 데이터 전체 교체
-    cur.execute("TRUNCATE TABLE stock_pool")
+    cur.execute("TRUNCATE TABLE tr_stock_pool")
 
     for r in records:
         cur.execute("""
-            INSERT INTO stock_pool
+            INSERT INTO tr_stock_pool
                 (code, name, sector, roe, pbr, per, debt_ratio, operating_margin,
                  target_price, foreign_net_buy, inst_net_buy, pool_score, data_date, updated_at)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -86,7 +86,7 @@ def save(records: list[dict], data_date: str):
     conn.commit()
     conn.close()
 
-    print(f"[완료] {len(records)}개 종목 stock_pool 저장 완료 (data_date={data_date})")
+    print(f"[완료] {len(records)}개 종목 tr_stock_pool 저장 완료 (data_date={data_date})")
     for r in records[:5]:
         print(f"   [{r['code']}] {r['name']}  pool_score={r.get('pool_score', 0):.1f}")
     if len(records) > 5:

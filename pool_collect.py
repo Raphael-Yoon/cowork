@@ -67,7 +67,7 @@ def calculate_pool_score(row):
     is_high_leverage = any(s in sector for s in ['건설', '조선', '해운', '항공', '전력', '가스', '에너지', '유틸리티', '운송'])
 
     if is_financial:
-        debt_score = 70.0
+        debt_score = 100.0
     elif is_high_leverage:
         debt_score = max(0.0, 100.0 - (debt / 3.0))  # 300% 초과 시 0점
     else:
@@ -76,8 +76,8 @@ def calculate_pool_score(row):
     # 3. 목표주가 보유 점수 (보유하고 있으므로 기본 100점, 미보유는 이미 필터링됨)
     target_score = 100.0 if target_price > 0 else 0.0
 
-    # 4. 업종 가중치 (기본 80점, 반도체/조선/화장품 등 주력업종 가점 100점)
-    strategic_sectors = ['반도체', '조선', '화장품', 'IT', '전기', '화학', '제약']
+    # 4. 업종 가중치 (기본 80점, 반도체/2차전지/방산 등 성장업종 가점 100점)
+    strategic_sectors = ['반도체', '2차전지', '방산']
     is_strategic = any(s in sector for s in strategic_sectors)
     sector_score = 100.0 if is_strategic else 80.0
 
@@ -120,7 +120,7 @@ def main():
         files = list_files_in_folder("Stock_Analysis_Results")
         sheets = [f for f in files if f['mimeType'] == 'application/vnd.google-apps.spreadsheet' or f['name'].endswith('.xlsx')]
         if sheets:
-            sheets.sort(key=extract_timestamp, reverse=True)
+            sheets.sort(key=lambda x: x.get('createdTime', ''), reverse=True)
             latest = sheets[0]
             print(f"최신 파일 발견: {latest['name']}")
             print("Step 2. Google Sheets 직접 읽기 중...")
@@ -269,19 +269,11 @@ def main():
     # pool_score 계산 및 추가
     df['pool_score'] = df.apply(calculate_pool_score, axis=1)
 
-    # score 기준 내림차순 정렬 및 상위 100개 선정
+    # score 기준 내림차순 정렬
     df_sorted = df.sort_values(by='pool_score', ascending=False)
-    df_top100 = df_sorted.head(100)
     
-    # 100개에 포함되지 않은 대장주(is_sector_leader == True) 찾기
-    df_remaining = df_sorted.iloc[100:]
-    df_missing_leaders = df_remaining[df_remaining['is_sector_leader']]
-    
-    # 100개 풀과 누락 대장주 병합
-    df_pool = pd.concat([df_top100, df_missing_leaders], ignore_index=True)
-    
-    print(f"기본 스코어 상위 100개 선정 완료")
-    print(f"누락된 섹터 대장주 {len(df_missing_leaders)}개 추가 편입 완료")
+    # 100개 제한 로직: pool_score 기준 상위 100개 선정 (대장주 가점이 반영된 최종 점수순)
+    df_pool = df_sorted.head(100).reset_index(drop=True)
     print(f"최종 선정된 Pool 종목 수: {len(df_pool)}개")
 
     # DB 적재 형식 구성
@@ -314,16 +306,16 @@ def main():
         cur = conn.cursor()
 
         # 신규 컬럼 마이그레이션 (없으면 추가)
-        cur.execute("ALTER TABLE stock_pool ADD COLUMN IF NOT EXISTS market_cap FLOAT DEFAULT 0")
-        cur.execute("ALTER TABLE stock_pool ADD COLUMN IF NOT EXISTS is_sector_leader BOOLEAN DEFAULT FALSE")
+        cur.execute("ALTER TABLE tr_stock_pool ADD COLUMN IF NOT EXISTS market_cap FLOAT DEFAULT 0")
+        cur.execute("ALTER TABLE tr_stock_pool ADD COLUMN IF NOT EXISTS is_sector_leader BOOLEAN DEFAULT FALSE")
         conn.commit()
 
         # 기존 테이블 비우기
-        cur.execute("TRUNCATE TABLE stock_pool")
+        cur.execute("TRUNCATE TABLE tr_stock_pool")
 
         for r in records:
             cur.execute("""
-                INSERT INTO stock_pool
+                INSERT INTO tr_stock_pool
                     (code, name, sector, roe, pbr, per, debt_ratio, operating_margin,
                      target_price, foreign_net_buy, inst_net_buy, pool_score,
                      market_cap, is_sector_leader, data_date, updated_at)
@@ -350,7 +342,7 @@ def main():
 
         conn.commit()
         conn.close()
-        print(f"[완료] {len(records)}개 종목 Neon DB stock_pool 테이블 적재 성공! (data_date={data_date})")
+        print(f"[완료] {len(records)}개 종목 Neon DB tr_stock_pool 테이블 적재 성공! (data_date={data_date})")
     except Exception as e:
         print(f"[오류] Neon DB 적재 실패: {e}")
         sys.exit(1)

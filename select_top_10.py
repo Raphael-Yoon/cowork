@@ -160,7 +160,7 @@ def run_collection():
 
     conn   = psycopg2.connect(database_url, cursor_factory=psycopg2.extras.DictCursor)
     cursor = conn.cursor()
-    cursor.execute("SELECT code, name, roe, debt_ratio, is_sector_leader, market_cap FROM stock_pool")
+    cursor.execute("SELECT code, name, roe, debt_ratio, is_sector_leader, market_cap FROM tr_stock_pool")
     rows = cursor.fetchall()
     conn.close()
 
@@ -223,6 +223,27 @@ def run_collection():
     return results
 
 
+def generate_fallback_oneliner(r):
+    is_leader = r.get("is_sector_leader", False)
+    roe = r.get("roe", 0.0)
+    upside = r.get("upside", 0.0)
+    sector = r.get("sector", "기타")
+    debt = r.get("debt", 0.0)
+    
+    if is_leader:
+        if roe >= 30:
+            return f"ROE {roe:.1f}%의 압도적인 자본효율성을 자랑하는 {sector} 업종 대표 대장주"
+        else:
+            return f"안정적인 수급 흐름과 높은 업종 대표성을 지닌 {sector} 섹터 대장주"
+    else:
+        if upside >= 50:
+            return f"목표주가 대비 {upside}%의 우수한 상승 여력(마진)을 보유한 {sector} 저평가주"
+        elif roe >= 25:
+            return f"자기자본이익률(ROE) {roe:.1f}%로 강력한 수익성을 입증한 {sector} 알짜 우량주"
+        else:
+            return f"부채비율 {debt:.1f}% 수준의 우수한 재무 건전성을 유지하고 있는 {sector} 우량 기업"
+
+
 if __name__ == '__main__':
     results = run_collection()
     
@@ -252,7 +273,7 @@ if __name__ == '__main__':
         ae = ai_evals.get(code, {
             "news_sentiment_score": 60,
             "disclosure_sentiment": "중립/없음",
-            "one_liner": f"{r['name']} 우량 종목 분석 및 공략"
+            "one_liner": generate_fallback_oneliner(r)
         })
 
         # 정규화 항목 계산
@@ -295,7 +316,7 @@ if __name__ == '__main__':
             value_disc_adj = 0.0
             mom_disc_score = 50.0
 
-        # A. Value 스코어 계산 (배당 제외, 섹터 대장주 가점 차등 부여)
+        # A. Value 스코어 계산 (배당 제외, 정의서 공식 준수)
         val_score = (roe_score * 0.50) + (supply_score * 0.30) + (news_score * 0.20) + value_disc_adj
         if r.get("is_sector_leader", False):
             # 동일 업종 내에서 실시간 시가총액 기준으로 1위인 종목은 +20점, 2~3위는 +15점 가산
@@ -328,15 +349,16 @@ if __name__ == '__main__':
             "upside": r["upside"],
             "roe": r["roe"],
             "debt": r["debt"],
+            "pbr": r["pbr"],
             "market_cap": r["market_cap"],
-            "one_liner": ae.get("one_liner", f"{r['name']} 우량 종목 분석 및 공략"),
+            "one_liner": ae.get("one_liner", generate_fallback_oneliner(r)),
             "reason": reason,
-            "news_summary": json.dumps(ae.get("news", []), ensure_ascii=False),
-            "disc_json": json.dumps(ae.get("disclosures", []), ensure_ascii=False)
+            "news_summary": json.dumps(r.get("news", []), ensure_ascii=False),
+            "disc_json": json.dumps(r.get("disclosures", []), ensure_ascii=False)
         }
 
-        # Value: Upside >= 15% and PBR <= 10.0 (with valid PBR > 0)
-        if r["upside"] >= 15.0 and 0 < r["pbr"] <= 10.0:
+        # Value: Upside >= 5% and PBR <= 12.0 (with valid PBR > 0)
+        if r["upside"] >= 5.0 and 0 < r["pbr"] <= 12.0:
             rec_val = record_base.copy()
             rec_val["score"] = val_score
             rec_val["rec_type"] = "value"
@@ -349,7 +371,8 @@ if __name__ == '__main__':
             rec_mom["rec_type"] = "momentum"
             momentum_list.append(rec_mom)
 
-    value_list.sort(key=lambda x: x["score"], reverse=True)
+    # Value 추천 리스트는 PBR이 낮을수록 저평가로 우선 선정하므로, 동일 점수 내 PBR 오름차순 정렬 적용
+    value_list.sort(key=lambda x: (x["score"], -x["pbr"]), reverse=True)
     momentum_list.sort(key=lambda x: x["score"], reverse=True)
 
     top_value = value_list[:10]

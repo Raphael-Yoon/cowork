@@ -54,7 +54,7 @@ def save(records: list[dict], data_date: str, rec_type: str = 'momentum'):
     for r in records:
         print(f"   [{r['code']}] {r['name']}  상승여력 {r['upside']:.1f}%")
 
-    # Neon DB audit_recommendations 저장
+    # Neon DB tr_audit_recommendations 저장
     if not DATABASE_URL:
         print("[오류] DATABASE_URL 환경 변수가 설정되지 않아 DB 저장을 건너뜁니다.")
         return
@@ -64,12 +64,12 @@ def save(records: list[dict], data_date: str, rec_type: str = 'momentum'):
         cursor = conn.cursor()
         
         # 전체를 다 비우지 않고 해당 추천 유형만 삭제 후 추가
-        cursor.execute("DELETE FROM audit_recommendations WHERE rec_type = %s", (rec_type,))
+        cursor.execute("DELETE FROM tr_audit_recommendations WHERE rec_type = %s", (rec_type,))
         
         for r in records:
             item_rec_type = r.get('rec_type', rec_type)
             cursor.execute("""
-                INSERT INTO audit_recommendations
+                INSERT INTO tr_audit_recommendations
                     (code, name, current_price, target_price, upside, opinion, data_date, created_at, score, roe, debt, reason, news_summary, rec_type, one_liner, disc_json)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
@@ -80,7 +80,7 @@ def save(records: list[dict], data_date: str, rec_type: str = 'momentum'):
             ))
         conn.commit()
         conn.close()
-        print(f"[완료] Neon DB audit_recommendations 테이블 적재 성공! (타입: {rec_type})")
+        print(f"[완료] Neon DB tr_audit_recommendations 테이블 적재 성공! (타입: {rec_type})")
     except Exception as e:
         print(f"[오류] Neon DB audit_recommendations 적재 실패: {e}")
 
