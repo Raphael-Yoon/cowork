@@ -156,12 +156,38 @@ def collect_candidate(cand, pool, dart_key):
 def run_collection(source_file=None):
     from dotenv import load_dotenv
     load_dotenv(TRADE_DIR / '.env')
-    dart_key = os.getenv('DART_API_KEY')
+    database_url = os.getenv('DATABASE_URL')
+    dart_key     = os.getenv('DART_API_KEY')
 
-    sqlite_path = str(TRADE_DIR / 'trade.db')
-    conn = sqlite3.connect(sqlite_path)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    db_type = 'sqlite'
+    if database_url and database_url.startswith('postgresql'):
+        import psycopg2
+        import psycopg2.extras
+        conn = psycopg2.connect(database_url, cursor_factory=psycopg2.extras.DictCursor)
+        cursor = conn.cursor()
+        db_type = 'postgres'
+    elif database_url and database_url.startswith('mysql'):
+        import pymysql
+        from urllib.parse import urlparse
+        parsed = urlparse(database_url)
+        conn = pymysql.connect(
+            host=parsed.hostname or '127.0.0.1',
+            port=parsed.port or 3306,
+            user=parsed.username or 'root',
+            password=parsed.password or '',
+            database=parsed.path.lstrip('/') if parsed.path else 'trade',
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
+        )
+        cursor = conn.cursor()
+        db_type = 'mysql'
+    else:
+        import sqlite3
+        SQLITE_PATH = TRADE_DIR / 'trade.db'
+        conn = sqlite3.connect(SQLITE_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        db_type = 'sqlite'
 
     if not source_file:
         import argparse
@@ -172,8 +198,8 @@ def run_collection(source_file=None):
 
     if not source_file:
         cursor.execute("""
-            SELECT DISTINCT source_file, data_date FROM tr_stock_pool
-            ORDER BY data_date DESC, updated_at DESC
+            SELECT DISTINCT source_file, data_date FROM tr_stock_pool 
+            ORDER BY data_date DESC
         """)
         pools = cursor.fetchall()
         if pools:
@@ -202,12 +228,13 @@ def run_collection(source_file=None):
         else:
             print("최근 적재된 소스 파일이 없어 전체 조회합니다...")
 
+    placeholder = '?' if db_type == 'sqlite' else '%s'
     if source_file:
         print(f"\n[선택된 Pool] 소스 파일({source_file}) 기준 tr_stock_pool 조회 중...")
-        cursor.execute("""
-            SELECT code, name, roe, debt_ratio, is_sector_leader, market_cap, data_date, source_file
-            FROM tr_stock_pool
-            WHERE source_file = ?
+        cursor.execute(f"""
+            SELECT code, name, roe, debt_ratio, is_sector_leader, market_cap, data_date, source_file 
+            FROM tr_stock_pool 
+            WHERE source_file = {placeholder}
         """, (source_file,))
     else:
         cursor.execute("SELECT code, name, roe, debt_ratio, is_sector_leader, market_cap, data_date, source_file FROM tr_stock_pool")
