@@ -3,7 +3,7 @@
 IT 감사팀 Top 10 추천 종목 저장 유틸리티
 기준 문서: cowork/Report/audit_logic.md
 
-AI가 분석·결정한 추천 종목을 Neon DB의 audit_recommendations 테이블에 저장.
+AI가 분석·결정한 추천 종목을 SQLite tr_audit_recommendations 테이블에 저장.
 
 사용법:
     python cowork/audit_save.py recommendations.json
@@ -12,16 +12,11 @@ AI가 분석·결정한 추천 종목을 Neon DB의 audit_recommendations 테이
 import argparse
 import json
 import os
-import psycopg2
-import psycopg2.extras
+import sqlite3
 from datetime import datetime
 from pathlib import Path
-from dotenv import load_dotenv
 
-# trade/.env 로드
-env_path = Path(__file__).resolve().parents[1] / 'trade' / '.env'
-load_dotenv(env_path)
-DATABASE_URL = os.getenv('DATABASE_URL')
+SQLITE_PATH = str(Path(__file__).resolve().parents[1] / 'trade' / 'trade.db')
 
 
 def save(records: list[dict], data_date: str, rec_type: str = 'momentum'):
@@ -54,35 +49,34 @@ def save(records: list[dict], data_date: str, rec_type: str = 'momentum'):
     for r in records:
         print(f"   [{r['code']}] {r['name']}  상승여력 {r['upside']:.1f}%")
 
-    # Neon DB tr_audit_recommendations 저장
-    if not DATABASE_URL:
-        print("[오류] DATABASE_URL 환경 변수가 설정되지 않아 DB 저장을 건너뜁니다.")
-        return
-
     try:
-        conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.DictCursor)
+        conn = sqlite3.connect(SQLITE_PATH)
         cursor = conn.cursor()
-        
-        # 전체를 다 비우지 않고 해당 추천 유형만 삭제 후 추가
-        cursor.execute("DELETE FROM tr_audit_recommendations WHERE rec_type = %s", (rec_type,))
-        
+
+        # 해당 추천 유형만 삭제 후 추가
+        cursor.execute("DELETE FROM tr_audit_recommendations WHERE rec_type = ?", (rec_type,))
+
         for r in records:
             item_rec_type = r.get('rec_type', rec_type)
+            item_data_date = r.get('data_date', data_date)
             cursor.execute("""
                 INSERT INTO tr_audit_recommendations
-                    (code, name, current_price, target_price, upside, opinion, data_date, created_at, score, roe, debt, reason, news_summary, rec_type, one_liner, disc_json)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    (code, name, current_price, target_price, upside, opinion, data_date, created_at,
+                     score, roe, debt, reason, news_summary, rec_type, one_liner, disc_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 r['code'], r['name'], float(r['current_price']), float(r['target_price']),
-                float(r['upside']), '', data_date, now_str, float(r['score']),
-                float(r.get('roe', 0)), float(r.get('debt', 0)), r.get('reason', ''), r.get('news_summary', '[]'),
-                item_rec_type, r.get('one_liner', ''), r.get('disc_json', '[]')
+                float(r['upside']), '', item_data_date, now_str, float(r['score']),
+                float(r.get('roe', 0)), float(r.get('debt', 0)), r.get('reason', ''),
+                r.get('news_summary', '[]'), item_rec_type, r.get('one_liner', ''),
+                r.get('disc_json', '[]')
             ))
+
         conn.commit()
         conn.close()
-        print(f"[완료] Neon DB tr_audit_recommendations 테이블 적재 성공! (타입: {rec_type})")
+        print(f"[완료] SQLite tr_audit_recommendations 테이블 적재 성공! (타입: {rec_type})")
     except Exception as e:
-        print(f"[오류] Neon DB audit_recommendations 적재 실패: {e}")
+        print(f"[오류] SQLite audit_recommendations 적재 실패: {e}")
 
 
 def main():

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-IT 감사팀 투자 후보군(pool) Neon DB 저장 유틸리티
+IT 감사팀 투자 후보군(pool) SQLite 저장 유틸리티
 기준 문서: cowork/Report/audit_logic.md
 
-AI가 결정한 100개 pool을 Neon PostgreSQL stock_pool 테이블에 저장.
+AI가 결정한 100개 pool을 SQLite tr_stock_pool 테이블에 저장.
 
 사용법:
     python cowork/pool_save.py pool.json
@@ -13,17 +13,11 @@ import argparse
 import json
 import os
 import sys
-import psycopg2
-import psycopg2.extras
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 
-# trade/.env 로드
-env_path = Path(__file__).resolve().parents[1] / 'trade' / '.env'
-from dotenv import load_dotenv
-load_dotenv(env_path)
-
-DATABASE_URL = os.getenv('DATABASE_URL')
+SQLITE_PATH = str(Path(__file__).resolve().parents[1] / 'trade' / 'trade.db')
 
 
 def save(records: list[dict], data_date: str):
@@ -53,26 +47,19 @@ def save(records: list[dict], data_date: str):
 
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.DictCursor)
+    conn = sqlite3.connect(SQLITE_PATH)
     cur = conn.cursor()
 
     # 기존 데이터 전체 교체
-    cur.execute("TRUNCATE TABLE tr_stock_pool")
+    cur.execute("DELETE FROM tr_stock_pool")
 
     for r in records:
         cur.execute("""
             INSERT INTO tr_stock_pool
                 (code, name, sector, roe, pbr, per, debt_ratio, operating_margin,
-                 target_price, foreign_net_buy, inst_net_buy, pool_score, data_date, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT (code) DO UPDATE SET
-                name=EXCLUDED.name, sector=EXCLUDED.sector,
-                roe=EXCLUDED.roe, pbr=EXCLUDED.pbr, per=EXCLUDED.per,
-                debt_ratio=EXCLUDED.debt_ratio, operating_margin=EXCLUDED.operating_margin,
-                target_price=EXCLUDED.target_price,
-                foreign_net_buy=EXCLUDED.foreign_net_buy, inst_net_buy=EXCLUDED.inst_net_buy,
-                pool_score=EXCLUDED.pool_score, data_date=EXCLUDED.data_date,
-                updated_at=EXCLUDED.updated_at
+                 target_price, foreign_net_buy, inst_net_buy, pool_score,
+                 source_file, data_date, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             r['code'], r['name'], r.get('sector', ''),
             float(r.get('roe', 0)), float(r.get('pbr', 0)), float(r.get('per', 0)),
@@ -80,7 +67,7 @@ def save(records: list[dict], data_date: str):
             float(r.get('target_price', 0)),
             float(r.get('foreign_net_buy', 0)), float(r.get('inst_net_buy', 0)),
             float(r.get('pool_score', 0)),
-            data_date, now_str
+            'manual', data_date, now_str
         ))
 
     conn.commit()
@@ -94,7 +81,7 @@ def save(records: list[dict], data_date: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='IT 감사팀 pool Neon DB 저장')
+    parser = argparse.ArgumentParser(description='IT 감사팀 pool SQLite 저장')
     parser.add_argument('json_file', help='pool JSON 파일 경로')
     parser.add_argument('--date', default=datetime.now().strftime('%Y-%m-%d'),
                         help='기준일 (기본값: 오늘, 형식: YYYY-MM-DD)')

@@ -12,8 +12,7 @@ STEP 2 데이터 수집 및 1차 필터링/최종 스코어링 도구 (IT 감사
 import sys
 import os
 import json
-import psycopg2
-import psycopg2.extras
+import sqlite3
 import OpenDartReader
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -149,28 +148,84 @@ def collect_candidate(cand, pool, dart_key):
         'disclosures':   disclosures,
         'is_sector_leader': cand.get('is_sector_leader', False),
         'market_cap':    parse_market_cap(naver_data.get('market_cap', 'N/A')),
+        'data_date':     cand.get('data_date'),
+        'source_file':   cand.get('source_file'),
     }
 
 
-def run_collection():
+def run_collection(source_file=None):
     from dotenv import load_dotenv
     load_dotenv(TRADE_DIR / '.env')
-    database_url = os.getenv('DATABASE_URL')
-    dart_key     = os.getenv('DART_API_KEY')
+    dart_key = os.getenv('DART_API_KEY')
 
-    conn   = psycopg2.connect(database_url, cursor_factory=psycopg2.extras.DictCursor)
+    sqlite_path = str(TRADE_DIR / 'trade.db')
+    conn = sqlite3.connect(sqlite_path)
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    cursor.execute("SELECT code, name, roe, debt_ratio, is_sector_leader, market_cap FROM tr_stock_pool")
+
+    if not source_file:
+        import argparse
+        parser = argparse.ArgumentParser(description="Top 10 추천종목 선정")
+        parser.add_argument('--source_file', help='특정 소스 파일명 기준 Pool 조회')
+        args, unknown = parser.parse_known_args()
+        source_file = args.source_file
+
+    if not source_file:
+        cursor.execute("""
+            SELECT DISTINCT source_file, data_date FROM tr_stock_pool
+            ORDER BY data_date DESC, updated_at DESC
+        """)
+        pools = cursor.fetchall()
+        if pools:
+            print("\n=== 사용 가능한 Pool 목록 ===")
+            for idx, p in enumerate(pools, 1):
+                print(f"[{idx}] 파일명: {p['source_file']} (기준일: {p['data_date']})")
+
+            try:
+                if sys.stdin.isatty():
+                    print(f"\n작업할 Pool의 번호를 입력하세요 (기본값 [1]): ", end="")
+                    sys.stdout.flush()
+                    sel = sys.stdin.readline().strip()
+                    if sel:
+                        choice = int(sel) - 1
+                        if 0 <= choice < len(pools):
+                            source_file = pools[choice]['source_file']
+                        else:
+                            print("잘못된 번호입니다. 최신 Pool을 사용합니다.")
+                            source_file = pools[0]['source_file']
+                    else:
+                        source_file = pools[0]['source_file']
+                else:
+                    source_file = pools[0]['source_file']
+            except Exception:
+                source_file = pools[0]['source_file']
+        else:
+            print("최근 적재된 소스 파일이 없어 전체 조회합니다...")
+
+    if source_file:
+        print(f"\n[선택된 Pool] 소스 파일({source_file}) 기준 tr_stock_pool 조회 중...")
+        cursor.execute("""
+            SELECT code, name, roe, debt_ratio, is_sector_leader, market_cap, data_date, source_file
+            FROM tr_stock_pool
+            WHERE source_file = ?
+        """, (source_file,))
+    else:
+        cursor.execute("SELECT code, name, roe, debt_ratio, is_sector_leader, market_cap, data_date, source_file FROM tr_stock_pool")
+
     rows = cursor.fetchall()
     conn.close()
 
     pool       = [{'code': r['code'], 'name': r['name'],
                    'roe': r['roe'] or 0.0, 'debt': r['debt_ratio'] or 0.0,
                    'is_sector_leader': bool(r['is_sector_leader']),
-                   'market_cap': r['market_cap'] or 0.0} for r in rows]
+                   'market_cap': r['market_cap'] or 0.0,
+                   'data_date': r['data_date'],
+                   'source_file': r['source_file']} for r in rows]
     candidates = [{'code': r['code'], 'name': r['name'],
                    'is_sector_leader': bool(r['is_sector_leader']),
-                   'market_cap': r['market_cap'] or 0.0} for r in rows]
+                   'market_cap': r['market_cap'] or 0.0,
+                   'data_date': r['data_date'],
+                   'source_file': r['source_file']} for r in rows]
 
     # 중복 제거
     seen = set()
@@ -354,7 +409,9 @@ if __name__ == '__main__':
             "one_liner": ae.get("one_liner", generate_fallback_oneliner(r)),
             "reason": reason,
             "news_summary": json.dumps(r.get("news", []), ensure_ascii=False),
-            "disc_json": json.dumps(r.get("disclosures", []), ensure_ascii=False)
+            "disc_json": json.dumps(r.get("disclosures", []), ensure_ascii=False),
+            "data_date": r.get("data_date"),
+            "source_file": r.get("source_file")
         }
 
         # Value: Upside >= 5% and PBR <= 12.0 (with valid PBR > 0)
