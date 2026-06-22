@@ -50,20 +50,52 @@ def save(records: list[dict], data_date: str, rec_type: str = 'momentum'):
         print(f"   [{r['code']}] {r['name']}  상승여력 {r['upside']:.1f}%")
 
     try:
-        conn = sqlite3.connect(SQLITE_PATH)
-        cursor = conn.cursor()
+        from dotenv import load_dotenv
+        COWORK_DIR = Path(__file__).resolve().parent
+        TRADE_DIR = COWORK_DIR.parent / 'trade'
+        load_dotenv(TRADE_DIR / '.env')
+        database_url = os.getenv('DATABASE_URL')
+
+        db_type = 'sqlite'
+        if database_url and database_url.startswith('postgresql'):
+            import psycopg2
+            import psycopg2.extras
+            conn = psycopg2.connect(database_url, cursor_factory=psycopg2.extras.DictCursor)
+            cursor = conn.cursor()
+            db_type = 'postgres'
+        elif database_url and database_url.startswith('mysql'):
+            import pymysql
+            from urllib.parse import urlparse
+            parsed = urlparse(database_url)
+            conn = pymysql.connect(
+                host=parsed.hostname or '127.0.0.1',
+                port=parsed.port or 3306,
+                user=parsed.username or 'root',
+                password=parsed.password or '',
+                database=parsed.path.lstrip('/') if parsed.path else 'trade',
+                charset='utf8mb4',
+                cursorclass=pymysql.cursors.DictCursor
+            )
+            cursor = conn.cursor()
+            db_type = 'mysql'
+        else:
+            conn = sqlite3.connect(SQLITE_PATH)
+            cursor = conn.cursor()
+            db_type = 'sqlite'
+
+        placeholder = '?' if db_type == 'sqlite' else '%s'
 
         # 해당 추천 유형만 삭제 후 추가
-        cursor.execute("DELETE FROM tr_audit_recommendations WHERE rec_type = ?", (rec_type,))
+        cursor.execute(f"DELETE FROM tr_audit_recommendations WHERE rec_type = {placeholder}", (rec_type,))
 
         for r in records:
             item_rec_type = r.get('rec_type', rec_type)
             item_data_date = r.get('data_date', data_date)
-            cursor.execute("""
+            cursor.execute(f"""
                 INSERT INTO tr_audit_recommendations
                     (code, name, current_price, target_price, upside, opinion, data_date, created_at,
                      score, roe, debt, reason, news_summary, rec_type, one_liner, disc_json)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
             """, (
                 r['code'], r['name'], float(r['current_price']), float(r['target_price']),
                 float(r['upside']), '', item_data_date, now_str, float(r['score']),
@@ -74,9 +106,9 @@ def save(records: list[dict], data_date: str, rec_type: str = 'momentum'):
 
         conn.commit()
         conn.close()
-        print(f"[완료] SQLite tr_audit_recommendations 테이블 적재 성공! (타입: {rec_type})")
+        print(f"[완료] {db_type.upper()} tr_audit_recommendations 테이블 적재 성공! (타입: {rec_type})")
     except Exception as e:
-        print(f"[오류] SQLite audit_recommendations 적재 실패: {e}")
+        print(f"[오류] {db_type.upper()} audit_recommendations 적재 실패: {e}")
 
 
 def main():
