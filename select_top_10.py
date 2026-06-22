@@ -441,8 +441,8 @@ if __name__ == '__main__':
             "source_file": r.get("source_file")
         }
 
-        # Value: Upside >= 5% and PBR <= 12.0 (with valid PBR > 0)
-        if r["upside"] >= 5.0 and 0 < r["pbr"] <= 12.0:
+        # Value: Upside >= 5% and PBR <= 12.0 (with valid PBR > 0), 시가총액 1조 원 이상 대형 우량주 제한 (로우리스크)
+        if r["upside"] >= 5.0 and 0 < r["pbr"] <= 12.0 and r["market_cap"] >= 1000000000000.0:
             rec_val = record_base.copy()
             rec_val["score"] = val_score
             rec_val["rec_type"] = "value"
