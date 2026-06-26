@@ -85,10 +85,6 @@ def collect_candidate(cand, pool, dart_key):
     ma5_diff  = naver_data.get('ma5_diff', 0.0)
     ma20_diff = naver_data.get('ma20_diff', 0.0)
 
-    # Hard Filter: 단기 하락 추세(역배열) 제외
-    if ma5_diff <= 0 and ma20_diff <= 0:
-        return None
-
     # DART 공시 수집 (최근 30일)
     disclosures = []
     if dart_key:
@@ -441,15 +437,16 @@ if __name__ == '__main__':
             "source_file": r.get("source_file")
         }
 
-        # Value: Upside >= 5% and PBR <= 12.0 (with valid PBR > 0), 시가총액 1조 원 이상 대형 우량주 제한 (로우리스크)
-        if r["upside"] >= 5.0 and 0 < r["pbr"] <= 12.0 and r["market_cap"] >= 1000000000000.0:
+        # Value: Upside >= 5% and PBR <= 3.0 (with valid PBR > 0), 시가총액 5,000억 원 이상 대형 우량주 제한 (로우리스크, 역배열 무관)
+        if r["upside"] >= 5.0 and 0 < r["pbr"] <= 3.0 and r["market_cap"] >= 500000000000.0:
             rec_val = record_base.copy()
             rec_val["score"] = val_score
             rec_val["rec_type"] = "value"
             value_list.append(rec_val)
 
-        # Momentum: Upside >= 30%
-        if r["upside"] >= 30.0:
+        # Momentum: Upside >= 15% and 단기 하락 추세(역배열: ma5_diff <= 0 and ma20_diff <= 0) 제외
+        is_downtrend = (r["ma5_diff"] <= 0 and r["ma20_diff"] <= 0)
+        if r["upside"] >= 15.0 and not is_downtrend:
             rec_mom = record_base.copy()
             rec_mom["score"] = mom_score
             rec_mom["rec_type"] = "momentum"

@@ -457,6 +457,20 @@ def get_all_naver_data(ticker):
                                 data['debt_ratio'] = float(val)
                             except:
                                 pass
+                    elif 'BPS' in th_text:
+                        val = get_last_valid_val(tds)
+                        if val:
+                            try:
+                                data['bps'] = int(float(val))
+                            except:
+                                pass
+                    elif 'PBR' in th_text:
+                        val = get_last_valid_val(tds)
+                        if val:
+                            try:
+                                data['pbr'] = float(val)
+                            except:
+                                pass
                     elif '유동비율' in th_text:
                         val = get_last_valid_val(tds)
                         if val:
