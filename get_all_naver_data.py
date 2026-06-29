@@ -72,6 +72,8 @@ def get_all_naver_data(ticker):
 
         # 배당
         'dividend_yield': 0,
+        'dps_history': [],
+        'payout_history': [],
 
         # 성장성 지표
         'revenue_growth': 'N/A',
@@ -478,6 +480,30 @@ def get_all_naver_data(ticker):
                                 data['current_ratio'] = float(val)
                             except:
                                 pass
+                    elif '주당배당금' in th_text:
+                        dps_list = []
+                        for td in tds[:3]:
+                            val = td.get_text(strip=True).replace(',', '')
+                            if val and val != '-' and val != 'N/A' and val != '':
+                                try:
+                                    dps_list.append(float(val))
+                                except:
+                                    dps_list.append(0.0)
+                            else:
+                                dps_list.append(0.0)
+                        data['dps_history'] = dps_list
+                    elif '배당성향' in th_text:
+                        payout_list = []
+                        for td in tds[:3]:
+                            val = td.get_text(strip=True).replace(',', '')
+                            if val and val != '-' and val != 'N/A' and val != '':
+                                try:
+                                    payout_list.append(float(val))
+                                except:
+                                    payout_list.append(0.0)
+                            else:
+                                payout_list.append(0.0)
+                        data['payout_history'] = payout_list
                 break
 
         # ===================================================================

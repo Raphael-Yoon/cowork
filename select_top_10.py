@@ -165,6 +165,8 @@ def collect_candidate(cand, pool, dart_key, sector_avg_pbr=None):
         'market_cap':    parse_market_cap(naver_data.get('market_cap', 'N/A')),
         'data_date':     cand.get('data_date'),
         'source_file':   cand.get('source_file'),
+        'dps_history':    naver_data.get('dps_history', []),
+        'payout_history':  naver_data.get('payout_history', []),
     }
 
 
@@ -491,7 +493,9 @@ if __name__ == '__main__':
             "disc_json": json.dumps(_enrich_items(r.get("disclosures", []), ae.get("disc_evals", []), key="report_nm"), ensure_ascii=False),
             "data_date": r.get("data_date"),
             "source_file": r.get("source_file"),
-            "dividend_yield": r.get("dividend_yield", 0.0)
+            "dividend_yield": r.get("dividend_yield", 0.0),
+            "dps_history": r.get("dps_history", []),
+            "payout_history": r.get("payout_history", []),
         }
 
         is_est = r.get("is_estimated_tp", False)
@@ -516,12 +520,48 @@ if __name__ == '__main__':
             rec_mom["reason"] = est_tag + rec_mom["reason"]
             momentum_list.append(rec_mom)
 
-        # Dividend: 배당수익률 3% 이상, 부채비율 150% 이하 (금융업 예외)
+        # Dividend: 배당수익률 3% 이상 12% 이하, 부채비율 150% 이하 (금융업 예외)
         _is_fin = any(k in r.get("sector", "") for k in ['은행', '증권', '보험', '손해보험', '생명보험'])
         _debt_ok = _is_fin or r["debt"] <= 150.0
-        if r.get("dividend_yield", 0.0) >= 3.0 and _debt_ok:
+        # 12% 초과 배당수익률은 주가 급락 또는 일회성 특별배당 가능성이 높아 Hard Cap 적용
+        _yield_cap_ok = r.get("dividend_yield", 0.0) <= 12.0
+
+        # 배당 지속성 통제 필터 (Sustainability Filters)
+        dps_hist = r.get("dps_history", [])
+        payout_hist = r.get("payout_history", [])
+
+        # 0) 이력 데이터 존재 검증: 3개년 이력이 없으면 연속성 판단 불가 → 제외
+        _has_history = len(dps_hist) >= 3
+
+        # 1) 연속 배당 검증: 최근 3개년 중 배당금이 0원인 해가 1개년 이상이면 제외 (일회성 배당 방지)
+        _zero_years = sum(1 for d in dps_hist if d <= 0)
+        _continuity_ok = _zero_years == 0
+
+        # 2) 배당성향 상한 검증: 최근 배당성향이 90.0% 초과면 제외 (곳간 터는 무리한 배당 방지)
+        _latest_payout = payout_hist[-1] if payout_hist else 0.0
+        _payout_ok = (0.0 < _latest_payout <= 90.0) if payout_hist else False
+
+        # 3) 배당 컷 검증: 직전 연도 대비 배당금이 30% 초과 삭감되었으면 제외
+        _no_severe_cut = True
+        if len(dps_hist) >= 2:
+            prev_dps = dps_hist[-2]
+            curr_dps = dps_hist[-1]
+            if prev_dps > 0 and curr_dps < prev_dps:
+                cut_ratio = (prev_dps - curr_dps) / prev_dps
+                if cut_ratio > 0.30:
+                    _no_severe_cut = False
+
+        if r.get("dividend_yield", 0.0) >= 3.0 and _yield_cap_ok and _debt_ok and _has_history and _continuity_ok and _payout_ok and _no_severe_cut:
             rec_div = record_base.copy()
-            rec_div["score"] = div_score
+            
+            # 지속성 보너스/패널티 반영한 div_score 보완
+            adjusted_div_score = div_score
+            if len(dps_hist) >= 3 and dps_hist[2] >= dps_hist[1] >= dps_hist[0] and all(d > 0 for d in dps_hist):
+                adjusted_div_score += 5.0
+            elif len(dps_hist) >= 2 and dps_hist[-1] < dps_hist[-2] and dps_hist[-2] > 0:
+                adjusted_div_score -= 10.0
+                
+            rec_div["score"] = round(min(adjusted_div_score, 100.0), 2)
             rec_div["rec_type"] = "dividend"
             rec_div["reason"] = est_tag + rec_div["reason"]
             dividend_list.append(rec_div)
