@@ -43,10 +43,30 @@ except ImportError:
     print("[오류] trade/drive_sync.py 모듈을 찾을 수 없습니다. 경로 설정을 확인하세요.")
     sys.exit(1)
 
+def get_sector_score(sector):
+    """
+    4단계 업종 Tier 점수 반환
+    Tier 1 (100): 반도체, 방산, 조선, 원전
+    Tier 2 ( 90): 2차전지, 바이오/제약, 게임/엔터, 전기장비, 건강관리
+    Tier 3 ( 80): 일반 업종 (금융, 화학, 소비재 등)
+    Tier 4 ( 65): 비주류 (출판, 섬유 등)
+    """
+    TIER1 = ['반도체', '방산', '방위', '조선', '원전']
+    TIER2 = ['2차전지', '배터리', '생물공학', '바이오', '제약', '게임', '엔터테인먼트', '전기장비', '건강관리']
+    TIER4 = ['출판', '섬유', '의류제조']
+    if any(k in sector for k in TIER1):
+        return 100.0
+    if any(k in sector for k in TIER2):
+        return 90.0
+    if any(k in sector for k in TIER4):
+        return 65.0
+    return 80.0
+
+
 def calculate_pool_score(row):
     """
-    pool_score 계산식:
-    pool_score = (ROE * 0.45) + (부채건전성 * 0.35) + (업종 가중치 * 0.1) + (섹터 대장주 * 0.1)
+    pool_score 계산식 (A안 적용):
+    pool_score = (ROE * 0.40) + (부채건전성 * 0.35) + (업종 가중치 * 0.15) + (섹터 대장주 * 0.10)
     각 항목은 0~100점 범위로 정규화
     """
     roe = float(row.get('ROE', 0))
@@ -68,13 +88,11 @@ def calculate_pool_score(row):
     else:
         debt_score = max(0.0, 100.0 - (debt / 1.5))  # 150% 초과 시 0점
 
-    # 3. 업종 가중치 (기본 80점, 반도체/2차전지/방산 등 성장업종 가점 100점)
-    strategic_sectors = ['반도체', '2차전지', '방산']
-    is_strategic = any(s in sector for s in strategic_sectors)
-    sector_score = 100.0 if is_strategic else 80.0
+    # 3. 업종 가중치 (4단계 Tier 시스템)
+    sector_score = get_sector_score(sector)
 
-    # 종합 스코어 계산 (섹터 대장주 10% 반영)
-    final_score = (roe_score * 0.45) + (debt_score * 0.35) + (sector_score * 0.1) + (sector_leader_score * 0.1)
+    # 종합 스코어 계산
+    final_score = (roe_score * 0.40) + (debt_score * 0.35) + (sector_score * 0.15) + (sector_leader_score * 0.10)
     return round(final_score, 2)
 
 def main():
@@ -218,14 +236,22 @@ def main():
     df['업종'] = df['업종'].astype(str).fillna('')
     is_financial = df['업종'].str.contains('은행|증권|보험|손해보험|생명보험', na=False)
     is_high_leverage = df['업종'].str.contains('건설|조선|해운|항공|전력|가스|에너지|유틸리티|운송', na=False)
-    
+
     df = df[
-        is_financial | 
-        (is_high_leverage & (df['부채비율'] <= 300.0)) | 
+        is_financial |
+        (is_high_leverage & (df['부채비율'] <= 300.0)) |
         (~is_financial & ~is_high_leverage & (df['부채비율'] <= 150.0))
     ]
 
-    # 5) 목표주가는 미보유 시 0원으로 기본 채움 (필터에서 강제 제외 안 함)
+    # 5) 바이오·제약·헬스케어 업종 제외 (투자 정책: 변동성 高, 임상 이진 리스크)
+    BIOTECH_EXCLUDE_KEYWORDS = ['제약', '바이오', '건강관리', '헬스케어']
+    bio_mask = df['업종'].str.contains('|'.join(BIOTECH_EXCLUDE_KEYWORDS), na=False)
+    excluded_bio = df[bio_mask]['종목명'].tolist()
+    df = df[~bio_mask]
+    if excluded_bio:
+        print(f"  [업종제외] 바이오·제약·헬스케어 {len(excluded_bio)}개 종목 Pool에서 제외: {', '.join(excluded_bio[:5])}{'...' if len(excluded_bio) > 5 else ''}")
+
+    # 6) 목표주가는 미보유 시 0원으로 기본 채움 (필터에서 강제 제외 안 함)
     if '목표주가' in df.columns:
         df['목표주가'] = pd.to_numeric(df['목표주가'], errors='coerce').fillna(0)
     else:

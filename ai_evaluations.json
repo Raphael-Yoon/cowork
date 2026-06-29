@@ -1,102 +1,172 @@
 {
-  "000660": {
+  "003230": {
     "news_sentiment_score": 85,
-    "disclosure_sentiment": "호재",
-    "one_liner": "HBM4E 차세대 메모리 샘플 공급 등 압도적인 반도체 기술 지배력이 돋보이나, 단기 급등에 따른 밸류에이션 조정 압력은 유의 필요"
+    "disclosure_sentiment": "중립/없음",
+    "one_liner": "불닭 글로벌 수요 확대 지속, 2Q26 성장 가속 및 Fwd P/E 16배 저평가 구간 매력 부각",
+    "news_evals": [
+      {"keyword": "불닭", "sentiment": "positive", "reason": "글로벌 수요 확대 지속, 2Q26 성장 가속 기대"},
+      {"keyword": "삼양식품", "sentiment": "positive", "reason": "Fwd P/E 16배 저평가 구간, 해외 매출 비중 증가 구조적 성장"}
+    ]
   },
   "483650": {
-    "news_sentiment_score": 80,
+    "news_sentiment_score": 88,
     "disclosure_sentiment": "중립/없음",
-    "one_liner": "비건 화장품 브랜드의 북미 및 글로벌 고성장세에 힘입어 ROE 50%를 상회하나, 신규 상장주로서의 가격 변동성과 오버행 리스크는 관찰 필요"
-  },
-  "257720": {
-    "news_sentiment_score": 75,
-    "disclosure_sentiment": "중립/없음",
-    "one_liner": "K-뷰티 글로벌 유통 플랫폼의 압도적 시장 지배력으로 고성장을 지속 중이나, 단기 주가 급등에 따른 차익실현 매물 경계 필요"
-  },
-  "092130": {
-    "news_sentiment_score": 70,
-    "disclosure_sentiment": "중립/없음",
-    "one_liner": "기업 신용평가 분야의 독점적 비즈니스 모델을 기반으로 안정적 현금 흐름을 자랑하나, 제한적인 외형 성장 한계는 고려 필요"
-  },
-  "064350": {
-    "news_sentiment_score": 85,
-    "disclosure_sentiment": "호재",
-    "one_liner": "K-방산 대표주로서 궤도차량 및 전차의 해외 수주 공시 모멘텀이 강력하나, 각국 국방 예산 집행 일정에 따른 인도 시기 지연 가능성 유의"
-  },
-  "419530": {
-    "news_sentiment_score": 80,
-    "disclosure_sentiment": "호재",
-    "one_liner": "하츄핑 등 핵심 아동 IP의 글로벌 흥행 및 영화화 모멘텀이 부각되나, 완구 매출 계절성 및 엔터 업황의 높은 실적 변동성 유의"
-  },
-  "214450": {
-    "news_sentiment_score": 78,
-    "disclosure_sentiment": "중립/없음",
-    "one_liner": "리쥬란 등 에스테틱 제품의 북미 및 아시아 수출 호조로 ROE 28%의 고효율 성장을 이어가나, 미용 의료기기 규제 강화 여부는 모니터링 필요"
-  },
-  "329180": {
-    "news_sentiment_score": 82,
-    "disclosure_sentiment": "호재",
-    "one_liner": "조선업 슈퍼사이클 돌입에 따른 친환경 선박 수주 행진으로 턴어라운드가 강력하나, 고숙련 노동력 부족 및 인건비 상승 부담은 변수"
+    "one_liner": "해외 성장세 가속으로 외국인 지분율 15%→32% 급등, 1Q26 매출·영업이익 +50% 달성 및 글로벌 로드쇼 효과 지속",
+    "news_evals": [
+      {"keyword": "달바", "sentiment": "positive", "reason": "외국인 지분율 15%→32% 급등, 글로벌 로드쇼 효과 지속"},
+      {"keyword": "외국인", "sentiment": "positive", "reason": "1Q26 매출·영업이익 +50% YoY 달성, 기관·외인 동반 매수"}
+    ]
   },
   "005690": {
-    "news_sentiment_score": 75,
+    "news_sentiment_score": 88,
     "disclosure_sentiment": "중립/없음",
-    "one_liner": "두산을 통해 글로벌 AI 인프라 공급망에 진입하는 소재 수혜 기대감이 있으나, 전통 화학 부문의 더딘 업황 회복 속도는 리스크 요인"
-  },
-  "326030": {
-    "news_sentiment_score": 80,
-    "disclosure_sentiment": "호재",
-    "one_liner": "뇌전증 신약 엑스코프리의 미국 매출 고성장과 파이프라인 확장세가 긍정적이나, 바이오 업종 특유의 임상 리스크 및 장기 투자 회수 기간 유의"
+    "one_liner": "창사 최대 실적(영업이익 +637% YoY) 달성 및 제3공장 준공 예정으로 추가 생산능력 확대, 배당 150% 상향",
+    "news_evals": [
+      {"keyword": "파미셀", "sentiment": "positive", "reason": "창사 최대 실적 달성, 영업이익 +637% YoY"},
+      {"keyword": "실적", "sentiment": "positive", "reason": "제3공장 준공 예정으로 Capa 확대, 배당 150% 상향"}
+    ]
   },
   "443060": {
-    "news_sentiment_score": 85,
-    "disclosure_sentiment": "호재",
-    "one_liner": "선박 생애주기 관리(AM) 및 친환경 개조 수요의 높은 진입장벽과 고수익성이 부각되나, 상장 초기 오버행 해제 물량 출회 가능성 유의"
-  },
-  "062040": {
-    "news_sentiment_score": 80,
+    "news_sentiment_score": 82,
     "disclosure_sentiment": "중립/없음",
-    "one_liner": "북미 AI 데이터센터향 특수변압기 쇼티지로 인한 장기 수주 메리트가 확고하나, 원자재인 구리 가격 급등에 따른 마진 압박 우려"
+    "one_liner": "기업가치 제고 계획 발표, 배당성향 50~70% 유지 및 2028년 ROE 30% 이상·영업이익률 20% 달성 목표",
+    "news_evals": [
+      {"keyword": "현대마린", "sentiment": "positive", "reason": "기업가치 제고 계획 발표, 배당성향 50~70% 장기 유지"},
+      {"keyword": "마린솔루션", "sentiment": "positive", "reason": "2028년 ROE 30% 이상, 영업이익률 20% 달성 목표"}
+    ]
+  },
+  "257720": {
+    "news_sentiment_score": 82,
+    "disclosure_sentiment": "중립/없음",
+    "one_liner": "1Q26 매출 +41% YoY 달성, 유럽·미국 K-Beauty 수출 급성장세 지속 및 시장 기대치 상회",
+    "news_evals": [
+      {"keyword": "실리콘투", "sentiment": "positive", "reason": "1Q26 매출 +41% YoY, 유럽·미국 K-Beauty 수출 급성장"},
+      {"keyword": "K-뷰티", "sentiment": "positive", "reason": "해외 K-Beauty 수출 급성장, 시장 기대치 상회"}
+    ]
   },
   "009540": {
-    "news_sentiment_score": 80,
-    "disclosure_sentiment": "중립/없음",
-    "one_liner": "글로벌 상선 시장의 친환경 선박 교체 수요 수혜를 입는 조선 지주사이나, 자회사들의 실적 턴어라운드 속도 편차는 감안 필요"
-  },
-  "476060": {
-    "news_sentiment_score": 75,
-    "disclosure_sentiment": "중립/없음",
-    "one_liner": "위식도역류질환 신약의 기술 수출 및 마일스톤 유입으로 흑자전환에 성공했으나, 국내외 경쟁 약물 출시 속도에 따른 마케팅 경쟁 격화 유의"
-  },
-  "036570": {
-    "news_sentiment_score": 70,
-    "disclosure_sentiment": "중립/없음",
-    "one_liner": "신작 MMORPG 글로벌 출시 모멘텀과 비용 효율화 노력이 진행 중이나, 기존 IP의 매출 하향 안정화 속도 제어가 당면 과제"
-  },
-  "052690": {
-    "news_sentiment_score": 80,
-    "disclosure_sentiment": "중립/없음",
-    "one_liner": "글로벌 원전 재건 및 친환경 에너지 건설 수주 기회가 확대되는 국면이나, 장기 프로젝트 특성상 정부 정책 방향성 변동 리스크 존재"
-  },
-  "064760": {
-    "news_sentiment_score": 78,
-    "disclosure_sentiment": "중립/없음",
-    "one_liner": "반도체 가공용 SiC 링 분야의 독보적인 점유율과 이익률을 회복하고 있으나, 낸드 생산 감산 조치 지속 여부가 실적 반등의 변수"
-  },
-  "039200": {
     "news_sentiment_score": 85,
     "disclosure_sentiment": "호재",
-    "one_liner": "면역질환 및 신약 파이프라인의 글로벌 라이선스 아웃 선급금 유입 모멘텀이 강력하나, 후기 임상 진행에 따른 추가 비용 부담 유의"
+    "one_liner": "오늘(6/29) LPG 수주 포함 연간 수주 목표 65% 조기 달성, VLGC 8척 1.4조 등 강력한 수주 모멘텀 지속",
+    "disc_evals": [
+      {"keyword": "단일판매", "sentiment": "positive", "reason": "VLGC 8척 1.4조 신규 수주 계약 체결, 연간 목표 65% 조기 달성"},
+      {"keyword": "공급계약", "sentiment": "positive", "reason": "LPG선 등 강력한 수주 모멘텀 지속, 수익성 개선 기대"}
+    ],
+    "news_evals": [
+      {"keyword": "수주", "sentiment": "positive", "reason": "연간 수주 목표 65% 달성, 강력한 수주 파이프라인 확인"},
+      {"keyword": "조선", "sentiment": "positive", "reason": "LNG·VLGC 시장 호황 지속, HD한국조선해양 최대 수혜"}
+    ]
   },
-  "138040": {
-    "news_sentiment_score": 75,
-    "disclosure_sentiment": "중립/없음",
-    "one_liner": "적극적인 주주 환원 정책과 밸류에이션 저평가 메리트가 확고한 대표 금융지주사이나, 금리 인하 사이클 진입 시 마진 축소 우려 존재"
+  "000660": {
+    "news_sentiment_score": 65,
+    "disclosure_sentiment": "악재",
+    "one_liner": "나스닥 상장 추진은 중장기 호재이나 45조 규모 유상증자 결정으로 단기 주식 희석 우려 및 수급 부담 상존",
+    "disc_evals": [
+      {"keyword": "유상증자", "sentiment": "negative", "reason": "45조 규모 유상증자 결정, 기존 주주 희석 우려 및 단기 수급 부담"},
+      {"keyword": "주요사항보고서", "sentiment": "negative", "reason": "대규모 자금 조달로 주당가치 희석, 단기 주가 하방 압력"}
+    ],
+    "news_evals": [
+      {"keyword": "유상증자", "sentiment": "negative", "reason": "45조 유상증자 발표로 외인·기관 수급 이탈 가속"},
+      {"keyword": "나스닥", "sentiment": "positive", "reason": "나스닥 상장 추진은 중장기 브랜드·자금 조달 호재"}
+    ]
   },
-  "014680": {
-    "news_sentiment_score": 80,
+  "263750": {
+    "news_sentiment_score": 85,
+    "disclosure_sentiment": "호재",
+    "one_liner": "창사 첫 배당 실시 및 자사주 50% 소각, 하반기 1000억 자사주 매입 계획으로 주주환원 의지 강력 확인",
+    "disc_evals": [
+      {"keyword": "자기주식", "sentiment": "positive", "reason": "자사주 50% 소각 결정, 주당가치 직접 제고 효과"},
+      {"keyword": "배당", "sentiment": "positive", "reason": "창사 첫 배당 실시, 주주환원 정책 전환의 강력한 시그널"}
+    ],
+    "news_evals": [
+      {"keyword": "펄어비스", "sentiment": "positive", "reason": "자사주 소각 + 하반기 1000억 매입 계획, 적극적 주주환원 확인"},
+      {"keyword": "자사주", "sentiment": "positive", "reason": "창사 첫 배당 + 자사주 50% 소각, 기업 밸류업 본격화"}
+    ]
+  },
+  "064400": {
+    "news_sentiment_score": 70,
     "disclosure_sentiment": "중립/없음",
-    "one_liner": "정밀화학 및 IT 첨단소재 분야의 탄탄한 시장 지배력과 원가 경쟁력으로 안정적 현금흐름을 창출하나, 반도체 전방 산업의 수요 회복 속도 변동성은 유의 필요"
+    "one_liner": "안정적 IT서비스 성장 지속, AI·클라우드 전환 구조적 수혜 기대주로 섹터 대표성 유지",
+    "news_evals": [
+      {"keyword": "LG씨엔에스", "sentiment": "positive", "reason": "AI·클라우드 전환 수요 증가, 구조적 IT서비스 성장 지속"},
+      {"keyword": "클라우드", "sentiment": "positive", "reason": "공공·금융 클라우드 전환 가속, LG씨엔에스 핵심 수혜"}
+    ]
+  },
+  "068790": {
+    "news_sentiment_score": 78,
+    "disclosure_sentiment": "호재",
+    "one_liner": "오늘(6/29) 단일판매·공급계약 체결 공시, OLED 8.6세대 투자 사이클 핵심 수혜 및 PBR 0.39 극단적 저평가",
+    "disc_evals": [
+      {"keyword": "단일판매", "sentiment": "positive", "reason": "OLED 8.6세대 디스플레이 장비 공급계약 체결, 수주 모멘텀 확인"},
+      {"keyword": "공급계약", "sentiment": "positive", "reason": "디스플레이 장비 신규 수주로 실적 가시성 향상"}
+    ],
+    "news_evals": [
+      {"keyword": "DMS", "sentiment": "positive", "reason": "OLED 8.6세대 투자 사이클 핵심 수혜주, PBR 0.39 극단적 저평가"},
+      {"keyword": "디스플레이", "sentiment": "positive", "reason": "삼성·LG OLED 투자 가속화로 장비 수주 증가 기대"}
+    ]
+  },
+  "064760": {
+    "news_sentiment_score": 72,
+    "disclosure_sentiment": "호재",
+    "one_liner": "SiC 코팅 시설 투자 확대 공시, 반도체 미세화 공정 핵심 부품 수요 지속 증가 및 점유율 방어",
+    "disc_evals": [
+      {"keyword": "시설투자", "sentiment": "positive", "reason": "SiC 코팅 Capa 확대 투자, 반도체 고객사 수요 증가 선제 대응"},
+      {"keyword": "신규시설", "sentiment": "positive", "reason": "SiC 코팅 핵심 공정 역량 강화, 시장 점유율 방어 기반 구축"}
+    ],
+    "news_evals": [
+      {"keyword": "티씨케이", "sentiment": "positive", "reason": "SiC 부품 수요 증가, 반도체 미세화 공정 핵심 공급사"},
+      {"keyword": "반도체", "sentiment": "positive", "reason": "SiC 코팅 시설 투자 확대로 수주 여력 증가"}
+    ]
+  },
+  "050890": {
+    "news_sentiment_score": 88,
+    "disclosure_sentiment": "중립/없음",
+    "one_liner": "미국 주파수 경매 개화로 통신장비 시장 본격 성장, 2026년 영업이익 +84.5% 전망에 외인·기관 동반 대규모 순매수",
+    "news_evals": [
+      {"keyword": "쏠리드", "sentiment": "positive", "reason": "미국 주파수 경매 개화, 통신장비 수요 본격 성장 사이클 진입"},
+      {"keyword": "통신장비", "sentiment": "positive", "reason": "2026년 영업이익 +84.5% 전망, 외인·기관 동반 대규모 매수"}
+    ]
+  },
+  "278470": {
+    "news_sentiment_score": 78,
+    "disclosure_sentiment": "중립/없음",
+    "one_liner": "ROE 83.8% 압도적 자본효율성 보유 K-Beauty 프리미엄 브랜드, 글로벌 확장 지속 및 기관 순매수 유입",
+    "news_evals": [
+      {"keyword": "에이피알", "sentiment": "positive", "reason": "ROE 83.8% 압도적 자본효율성, K-Beauty 프리미엄 브랜드 확장"},
+      {"keyword": "APR", "sentiment": "positive", "reason": "글로벌 D2C 채널 확장, 기관 순매수 유입 지속"}
+    ]
+  },
+  "041190": {
+    "news_sentiment_score": 68,
+    "disclosure_sentiment": "중립/없음",
+    "one_liner": "배당수익률 6.2%의 고배당 창업투자 대장주, 안정적 포트폴리오 수익 및 외인·기관 동반 매수 흐름 유지",
+    "disc_evals": [
+      {"keyword": "배당", "sentiment": "positive", "reason": "6.2% 고배당 유지, 안정적 포트폴리오 수익 기반 확인"}
+    ]
+  },
+  "036030": {
+    "news_sentiment_score": 68,
+    "disclosure_sentiment": "중립/없음",
+    "one_liner": "배당수익률 6.4%의 고배당 인터넷소매 대장주, 상승여력 244% 및 기관 순매수 유입 모멘텀 유효",
+    "disc_evals": [
+      {"keyword": "배당", "sentiment": "positive", "reason": "6.4% 고배당 유지, 기관 순매수 유입 및 상승여력 244% 대비 저평가"}
+    ]
+  },
+  "099390": {
+    "news_sentiment_score": 68,
+    "disclosure_sentiment": "중립/없음",
+    "one_liner": "배당수익률 5.0%의 고배당 소프트웨어 대장주, 상승여력 480% 및 자체 추정 목표가 대비 극단적 저평가",
+    "disc_evals": [
+      {"keyword": "배당", "sentiment": "positive", "reason": "5.0% 고배당 + 상승여력 480%, 소프트웨어 대장주 극단적 저평가"}
+    ]
+  },
+  "147830": {
+    "news_sentiment_score": 72,
+    "disclosure_sentiment": "호재",
+    "one_liner": "단일판매·공급계약 체결 기재정정 공시 확인, 전기장비 수주 모멘텀 지속 및 부채비율 17.7% 재무 건전성 우수",
+    "disc_evals": [
+      {"keyword": "단일판매", "sentiment": "positive", "reason": "전기장비 단일판매·공급계약 기재정정 확인, 수주 모멘텀 유효"},
+      {"keyword": "기재정정", "sentiment": "positive", "reason": "계약 내용 정정 공시로 수주 실체 확인, 부채비율 17.7% 재무 우량"}
+    ]
   }
 }

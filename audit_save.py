@@ -91,6 +91,7 @@ def save(records: list[dict], data_date: str, rec_type: str = 'momentum'):
         for r in records:
             item_rec_type = r.get('rec_type', rec_type)
             item_data_date = r.get('data_date', data_date)
+            opinion_val = str(r.get('dividend_yield', '')) if item_rec_type == 'dividend' else r.get('opinion', '')
             cursor.execute(f"""
                 INSERT INTO tr_audit_recommendations
                     (code, name, current_price, target_price, upside, opinion, data_date, created_at,
@@ -98,7 +99,7 @@ def save(records: list[dict], data_date: str, rec_type: str = 'momentum'):
                 VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
             """, (
                 r['code'], r['name'], float(r['current_price']), float(r['target_price']),
-                float(r['upside']), '', item_data_date, now_str, float(r['score']),
+                float(r['upside']), opinion_val, item_data_date, now_str, float(r['score']),
                 float(r.get('roe', 0)), float(r.get('debt', 0)), r.get('reason', ''),
                 r.get('news_summary', '[]'), item_rec_type, r.get('one_liner', ''),
                 r.get('disc_json', '[]')
@@ -116,8 +117,8 @@ def main():
     parser.add_argument('json_file', help='추천 종목 JSON 파일 경로')
     parser.add_argument('--date', default=datetime.now().strftime('%Y-%m-%d'),
                         help='기준일 (기본값: 오늘, 형식: YYYY-MM-DD)')
-    parser.add_argument('--type', default='momentum', choices=['momentum', 'value'],
-                        help='추천 유형 (momentum 또는 value)')
+    parser.add_argument('--type', default='momentum', choices=['momentum', 'value', 'dividend'],
+                        help='추천 유형 (momentum, value 또는 dividend)')
     args = parser.parse_args()
 
     json_path = Path(args.json_file)
@@ -132,6 +133,21 @@ def main():
         records = records['stocks']
 
     save(records, args.date, args.type)
+
+    # DB 적재 성공 후, trade/results/ 디렉토리로 JSON 파일 자동 복사
+    try:
+        import shutil
+        trade_results_dir = Path(__file__).resolve().parents[1] / 'trade' / 'results'
+        trade_results_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 파일명을 추천 타입에 따라 표준화하여 복사 (value_recommendations.json / momentum_recommendations.json)
+        dest_filename = f"{args.type}_recommendations.json"
+        dest_path = trade_results_dir / dest_filename
+        
+        shutil.copy2(json_path, dest_path)
+        print(f"[완료] 추천 JSON 파일 이관 준비 완료: {json_path.name} -> {dest_path}")
+    except Exception as copy_err:
+        print(f"[경고] 추천 JSON 파일 복사 실패: {copy_err}")
 
 
 if __name__ == '__main__':

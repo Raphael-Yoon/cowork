@@ -21,6 +21,12 @@ from pathlib import Path
 COWORK_DIR = Path(__file__).resolve().parent
 TRADE_DIR = COWORK_DIR.parent / 'trade'
 
+# 최종 추천에서 제외할 업종 키워드 (바이오·제약·헬스케어)
+EXCLUDED_SECTORS = ['제약', '바이오', '건강관리', '헬스케어']
+
+def is_excluded_sector(sector: str) -> bool:
+    return any(k in (sector or '') for k in EXCLUDED_SECTORS)
+
 if os.name == 'nt':
     try:
         sys.stdout.reconfigure(encoding='utf-8')
@@ -56,7 +62,7 @@ def parse_market_cap(cap_str):
     return val
 
 
-def collect_candidate(cand, pool, dart_key):
+def collect_candidate(cand, pool, dart_key, sector_avg_pbr=None):
     """종목 1개의 시장 데이터·뉴스·공시를 수집하여 반환."""
     code = cand['code']
     name = cand['name']
@@ -75,8 +81,20 @@ def collect_candidate(cand, pool, dart_key):
     roe = naver_data.get('roe', 0.0)
     debt = naver_data.get('debt_ratio', 0.0)
 
-    if target_price <= 0 or current_price <= 0:
+    if current_price <= 0:
         return None
+
+    is_estimated_tp = False
+    if target_price <= 0:
+        # 자체 목표주가 추정: BPS × min(섹터 평균 PBR, 3.0)
+        bps = naver_data.get('bps', 0)
+        sector = cand.get('sector', '기타')
+        avg_pbr = (sector_avg_pbr or {}).get(sector, 0.0)
+        if bps > 0 and avg_pbr > 0:
+            target_price = int(bps * min(avg_pbr, 3.0))
+            is_estimated_tp = True
+        if target_price <= 0:
+            return None
 
     upside = round(((target_price - current_price) / current_price) * 100.0, 1)
     if upside <= 0:
@@ -127,6 +145,7 @@ def collect_candidate(cand, pool, dart_key):
         'current_price': current_price,
         'target_price':  target_price,
         'upside':        upside,
+        'is_estimated_tp': is_estimated_tp,
         'roe':           roe,
         'debt':          debt,
         'ma5_diff':      round(ma5_diff, 2),
@@ -147,6 +166,26 @@ def collect_candidate(cand, pool, dart_key):
         'data_date':     cand.get('data_date'),
         'source_file':   cand.get('source_file'),
     }
+
+
+def _enrich_items(items: list, evals: list, key: str) -> list:
+    """
+    items(공시 또는 뉴스 목록)의 각 항목에 sentiment/reason을 주입한다.
+    evals는 ai_evaluations.json의 disc_evals 또는 news_evals 배열.
+    keyword가 items[key] 필드에 포함될 경우 매칭으로 판단.
+    """
+    if not evals:
+        return items
+    enriched = []
+    for item in items:
+        text = item.get(key, '')
+        matched = next((e for e in evals if e.get('keyword', '') in text), None)
+        if matched:
+            item = dict(item)
+            item['sentiment'] = matched['sentiment']
+            item['reason'] = matched['reason']
+        enriched.append(item)
+    return enriched
 
 
 def run_collection(source_file=None):
@@ -228,15 +267,24 @@ def run_collection(source_file=None):
     if source_file:
         print(f"\n[선택된 Pool] 소스 파일({source_file}) 기준 tr_stock_pool 조회 중...")
         cursor.execute(f"""
-            SELECT code, name, roe, debt_ratio, is_sector_leader, market_cap, data_date, source_file 
-            FROM tr_stock_pool 
+            SELECT code, name, sector, roe, debt_ratio, pbr, is_sector_leader, market_cap, data_date, source_file
+            FROM tr_stock_pool
             WHERE source_file = {placeholder}
         """, (source_file,))
     else:
-        cursor.execute("SELECT code, name, roe, debt_ratio, is_sector_leader, market_cap, data_date, source_file FROM tr_stock_pool")
+        cursor.execute("SELECT code, name, sector, roe, debt_ratio, pbr, is_sector_leader, market_cap, data_date, source_file FROM tr_stock_pool")
 
     rows = cursor.fetchall()
     conn.close()
+
+    # 섹터별 평균 PBR 계산 (자체 목표주가 추정용)
+    from collections import defaultdict
+    sector_pbr_map = defaultdict(list)
+    for r in rows:
+        pbr_val = r['pbr'] if r['pbr'] else 0.0
+        if pbr_val > 0:
+            sector_pbr_map[r['sector'] or '기타'].append(float(pbr_val))
+    sector_avg_pbr = {s: sum(vals) / len(vals) for s, vals in sector_pbr_map.items() if vals}
 
     pool       = [{'code': r['code'], 'name': r['name'],
                    'roe': r['roe'] or 0.0, 'debt': r['debt_ratio'] or 0.0,
@@ -245,6 +293,7 @@ def run_collection(source_file=None):
                    'data_date': r['data_date'],
                    'source_file': r['source_file']} for r in rows]
     candidates = [{'code': r['code'], 'name': r['name'],
+                   'sector': r['sector'] or '기타',
                    'is_sector_leader': bool(r['is_sector_leader']),
                    'market_cap': r['market_cap'] or 0.0,
                    'data_date': r['data_date'],
@@ -263,7 +312,7 @@ def run_collection(source_file=None):
 
     results = []
     with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = {executor.submit(collect_candidate, c, pool, dart_key): c for c in candidates}
+        futures = {executor.submit(collect_candidate, c, pool, dart_key, sector_avg_pbr): c for c in candidates}
         done = 0
         for future in as_completed(futures):
             done += 1
@@ -345,6 +394,7 @@ if __name__ == '__main__':
 
     value_list = []
     momentum_list = []
+    dividend_list = []
 
     for r in results:
         code = r["code"]
@@ -409,11 +459,17 @@ if __name__ == '__main__':
                 val_score += 20.0
             else:
                 val_score += 15.0
-        val_score = round(val_score, 2)
+        val_score = round(min(val_score, 100.0), 2)
 
         # B. Momentum 스코어 계산
         mom_score = (price_mom_score * 0.30) + (supply_score * 0.30) + (news_score * 0.25) + (mom_disc_score * 0.10) + (roe_score * 0.05)
         mom_score = round(mom_score, 2)
+
+        # C. Dividend 스코어 계산 (배당수익률 반영)
+        div_yield = r.get("dividend_yield", 0.0)
+        div_yield_score = min(div_yield * 15.0, 100.0)
+        div_score = (div_yield_score * 0.50) + (roe_score * 0.20) + (supply_score * 0.20) + (news_score * 0.10) + value_disc_adj
+        div_score = round(div_score, 2)
 
         reason = f"[{r['sector']}] 뉴스:{news_score}점 | ROE {r['roe']:.1f}% | 수급 {supply_text} | 상승여력 {r['upside']}%"
         if r.get("is_sector_leader", False):
@@ -431,33 +487,70 @@ if __name__ == '__main__':
             "market_cap": r["market_cap"],
             "one_liner": ae.get("one_liner", generate_fallback_oneliner(r)),
             "reason": reason,
-            "news_summary": json.dumps(r.get("news", []), ensure_ascii=False),
-            "disc_json": json.dumps(r.get("disclosures", []), ensure_ascii=False),
+            "news_summary": json.dumps(_enrich_items(r.get("news", []), ae.get("news_evals", []), key="title"), ensure_ascii=False),
+            "disc_json": json.dumps(_enrich_items(r.get("disclosures", []), ae.get("disc_evals", []), key="report_nm"), ensure_ascii=False),
             "data_date": r.get("data_date"),
-            "source_file": r.get("source_file")
+            "source_file": r.get("source_file"),
+            "dividend_yield": r.get("dividend_yield", 0.0)
         }
 
-        # Value: Upside >= 5% and PBR <= 3.0 (with valid PBR > 0), 시가총액 5,000억 원 이상 대형 우량주 제한 (로우리스크, 역배열 무관)
-        if r["upside"] >= 5.0 and 0 < r["pbr"] <= 3.0 and r["market_cap"] >= 500000000000.0:
+        is_est = r.get("is_estimated_tp", False)
+        est_tag = "[추정목표가] " if is_est else ""
+
+        # Value: 추정목표가 종목은 Upside 허들 강화 (5% → 10%)
+        value_upside_min = 10.0 if is_est else 5.0
+        if r["upside"] >= value_upside_min and 0 < r["pbr"] <= 12.0 and r["market_cap"] >= 500000000000.0:
             rec_val = record_base.copy()
             rec_val["score"] = val_score
             rec_val["rec_type"] = "value"
+            rec_val["reason"] = est_tag + rec_val["reason"]
             value_list.append(rec_val)
 
-        # Momentum: Upside >= 15% and 단기 하락 추세(역배열: ma5_diff <= 0 and ma20_diff <= 0) 제외
-        is_downtrend = (r["ma5_diff"] <= 0 and r["ma20_diff"] <= 0)
-        if r["upside"] >= 15.0 and not is_downtrend:
+        # Momentum: 추정목표가 종목은 Upside 허들 강화 (15% → 20%)
+        momentum_upside_min = 20.0 if is_est else 15.0
+        is_downtrend = (r["ma5_diff"] <= 0 or r["ma20_diff"] <= 0)
+        if r["upside"] >= momentum_upside_min and not is_downtrend:
             rec_mom = record_base.copy()
             rec_mom["score"] = mom_score
             rec_mom["rec_type"] = "momentum"
+            rec_mom["reason"] = est_tag + rec_mom["reason"]
             momentum_list.append(rec_mom)
+
+        # Dividend: 배당수익률 3% 이상, 부채비율 150% 이하 (금융업 예외)
+        _is_fin = any(k in r.get("sector", "") for k in ['은행', '증권', '보험', '손해보험', '생명보험'])
+        _debt_ok = _is_fin or r["debt"] <= 150.0
+        if r.get("dividend_yield", 0.0) >= 3.0 and _debt_ok:
+            rec_div = record_base.copy()
+            rec_div["score"] = div_score
+            rec_div["rec_type"] = "dividend"
+            rec_div["reason"] = est_tag + rec_div["reason"]
+            dividend_list.append(rec_div)
 
     # Value 추천 리스트는 PBR이 낮을수록 저평가로 우선 선정하므로, 동일 점수 내 PBR 오름차순 정렬 적용
     value_list.sort(key=lambda x: (x["score"], -x["pbr"]), reverse=True)
     momentum_list.sort(key=lambda x: x["score"], reverse=True)
+    dividend_list.sort(key=lambda x: (x["score"], x["dividend_yield"]), reverse=True)
 
-    top_value = value_list[:10]
-    top_momentum = momentum_list[:10]
+    # 바이오·제약·헬스케어 업종 제외 — 1차 차단은 pool_collect.py 필터 5번에서 수행.
+    # 이 블록은 Pool 외부 데이터 유입 등 예외 상황에 대한 안전망(safety net)임.
+    def _is_excluded(rec):
+        reason = rec.get("reason", "")
+        return any(k in reason for k in EXCLUDED_SECTORS)
+
+    value_list_filtered    = [r for r in value_list    if not _is_excluded(r)]
+    momentum_list_filtered = [r for r in momentum_list if not _is_excluded(r)]
+    dividend_list_filtered = [r for r in dividend_list if not _is_excluded(r)]
+
+    excluded_v = [r["name"] for r in value_list    if _is_excluded(r)]
+    excluded_m = [r["name"] for r in momentum_list if _is_excluded(r)]
+    if excluded_v:
+        print(f"  [안전망-바이오제외-Value] {', '.join(excluded_v[:5])}")
+    if excluded_m:
+        print(f"  [안전망-바이오제외-Momentum] {', '.join(excluded_m[:5])}")
+
+    top_value    = value_list_filtered[:10]
+    top_momentum = momentum_list_filtered[:10]
+    top_dividend = dividend_list_filtered[:10]
 
     # JSON 저장
     with open(COWORK_DIR / "value_recommendations.json", "w", encoding="utf-8") as f:
@@ -466,8 +559,12 @@ if __name__ == '__main__':
     with open(COWORK_DIR / "momentum_recommendations.json", "w", encoding="utf-8") as f:
         json.dump(top_momentum, f, ensure_ascii=False, indent=2)
 
+    with open(COWORK_DIR / "dividend_recommendations.json", "w", encoding="utf-8") as f:
+        json.dump(top_dividend, f, ensure_ascii=False, indent=2)
+
     print(f"\n{'='*60}")
     print("최종 추천 리스트 산출 완료!")
     print(f"  - Value: {len(top_value)}개 종목 value_recommendations.json 저장 완료")
     print(f"  - Momentum: {len(top_momentum)}개 종목 momentum_recommendations.json 저장 완료")
+    print(f"  - Dividend: {len(top_dividend)}개 종목 dividend_recommendations.json 저장 완료")
     print(f"{'='*60}\n")
