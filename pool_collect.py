@@ -1,406 +1,278 @@
 # -*- coding: utf-8 -*-
-"""
-IT 감사팀 투자 후보군(pool) 수집 및 구성 자동화 스크립트
-기준 문서: cowork/Report/audit_logic.md
-
-역할:
-    1. 구글 드라이브(Stock_Analysis_Results 폴더)에서 가장 최근 생성된 재무 엑셀 파일을 다운로드합니다.
-    2. 재무 필터링 규칙을 적용하여 대상 종목을 선별합니다.
-    3. 정량적 스코어링 공식에 따라 pool_score를 계산합니다.
-    4. 상위 100개 종목을 선정하여 Neon PostgreSQL의 stock_pool 테이블에 적재합니다.
-
-사용법:
-    python cowork/pool_collect.py
-"""
-import io
 import os
 import sys
+import io
+import argparse
 import json
 import sqlite3
-import pandas as pd
+import re
 from datetime import datetime
-from pathlib import Path
+import pandas as pd
+import numpy as np
+from dotenv import load_dotenv
 
-# Windows 콘솔 UTF-8 설정
-if os.name == 'nt':
-    try:
-        sys.stdout.reconfigure(encoding='utf-8')
-        sys.stderr.reconfigure(encoding='utf-8')
-    except AttributeError:
-        pass
+# 프로젝트 루트 경로 추가 (drive_sync 등을 가져오기 위함)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_ROOT)
+sys.path.append(os.path.join(PROJECT_ROOT, 'trade'))
 
-# 경로 설정
-COWORK_DIR = Path(__file__).resolve().parent
-TRADE_DIR = COWORK_DIR.parent / 'trade'
-sys.path.append(str(TRADE_DIR))
+# 환경 변수 로드
+load_dotenv(os.path.join(PROJECT_ROOT, 'trade', '.env'))
+DATABASE_URL = os.getenv('DATABASE_URL')
+SQLITE_PATH = os.path.join(PROJECT_ROOT, 'trade', 'trade.db')
 
-SQLITE_PATH = str(TRADE_DIR / 'trade.db')
-
-# 구글 드라이브 모듈 임포트
-try:
-    from drive_sync import list_files_in_folder, read_sheet_as_df
-except ImportError:
-    print("[오류] trade/drive_sync.py 모듈을 찾을 수 없습니다. 경로 설정을 확인하세요.")
-    sys.exit(1)
-
-def get_sector_score(sector):
-    """
-    4단계 업종 Tier 점수 반환
-    Tier 1 (100): 반도체, 방산, 조선, 원전
-    Tier 2 ( 90): 2차전지, 바이오/제약, 게임/엔터, 전기장비, 건강관리
-    Tier 3 ( 80): 일반 업종 (금융, 화학, 소비재 등)
-    Tier 4 ( 65): 비주류 (출판, 섬유 등)
-    """
-    TIER1 = ['반도체', '방산', '방위', '조선', '원전']
-    TIER2 = ['2차전지', '배터리', '생물공학', '바이오', '제약', '게임', '엔터테인먼트', '전기장비', '건강관리']
-    TIER4 = ['출판', '섬유', '의류제조']
-    if any(k in sector for k in TIER1):
-        return 100.0
-    if any(k in sector for k in TIER2):
-        return 90.0
-    if any(k in sector for k in TIER4):
-        return 65.0
-    return 80.0
-
-
-def calculate_pool_score(row):
-    """
-    pool_score 계산식 (A안 적용):
-    pool_score = (ROE * 0.40) + (부채건전성 * 0.35) + (업종 가중치 * 0.15) + (섹터 대장주 * 0.10)
-    각 항목은 0~100점 범위로 정규화
-    """
-    roe = float(row.get('ROE', 0))
-    debt = float(row.get('부채비율', 0))
-    sector = str(row.get('업종', ''))
-    sector_leader_score = float(row.get('sector_leader_score', 0))
-
-    # 1. ROE 점수 (50% 이상 시 100점 만점)
-    roe_score = min(max(roe, 0) * 2.0, 100.0)
-
-    # 2. 부채건전성 점수 (금융업: 100점 고정, 고부채 업종: 0~300% 기준 정규화, 일반 업종: 0~150% 기준 정규화)
-    is_financial = any(s in sector for s in ['은행', '증권', '보험', '손해보험', '생명보험'])
-    is_high_leverage = any(s in sector for s in ['건설', '조선', '해운', '항공', '전력', '가스', '에너지', '유틸리티', '운송'])
-
-    if is_financial:
-        debt_score = 100.0
-    elif is_high_leverage:
-        debt_score = max(0.0, 100.0 - (debt / 3.0))  # 300% 초과 시 0점
+def _new_db_conn():
+    if DATABASE_URL and DATABASE_URL.startswith('mysql'):
+        import pymysql
+        from urllib.parse import urlparse
+        parsed = urlparse(DATABASE_URL)
+        return pymysql.connect(
+            host=parsed.hostname or '127.0.0.1',
+            port=parsed.port or 3306,
+            user=parsed.username or 'root',
+            password=parsed.password or '',
+            database=parsed.path.lstrip('/') if parsed.path else 'trade',
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
+        )
     else:
-        debt_score = max(0.0, 100.0 - (debt / 1.5))  # 150% 초과 시 0점
+        conn = sqlite3.connect(SQLITE_PATH)
+        conn.row_factory = sqlite3.Row
+        return conn
 
-    # 3. 업종 가중치 (4단계 Tier 시스템)
-    sector_score = get_sector_score(sector)
-
-    # 종합 스코어 계산
-    final_score = (roe_score * 0.40) + (debt_score * 0.35) + (sector_score * 0.15) + (sector_leader_score * 0.10)
-    return round(final_score, 2)
+def parse_args():
+    parser = argparse.ArgumentParser(description="Sector-based stock pool generator")
+    parser.add_argument('--source_file', required=True, help="Original spreadsheet file name")
+    parser.add_argument('--id', required=False, help="Google Drive Spreadsheet ID")
+    parser.add_argument('--file', required=False, help="Local file path")
+    return parser.parse_args()
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(description="IT 감사팀 pool 수집 및 구성")
-    parser.add_argument('--file', help='로컬 엑셀 파일 경로')
-    parser.add_argument('--id', help='구글 드라이브 spreadsheet ID')
-    parser.add_argument('--source_file', help='수집 대상이 된 소스 파일명(구글 시트명 또는 로컬 파일명)')
-    args, unknown = parser.parse_known_args()
-
-    source_file_val = args.source_file
-    df = None
-    if args.id:
-        print(f"Step 1. 지정된 구글 드라이브 Spreadsheet ID 로드 중: {args.id}")
-        try:
-            df = read_sheet_as_df(args.id)
-            if not source_file_val:
-                source_file_val = f"drive_sheet_{args.id}.xlsx"
-        except Exception as e:
-            print(f"[오류] 구글 드라이브 시트 로드 실패: {e}")
-            sys.exit(1)
-    elif args.file:
-        print(f"Step 1. 지정된 로컬 파일 로드 중: {args.file}")
-        try:
-            df = pd.read_excel(args.file)
-            if not source_file_val:
-                source_file_val = os.path.basename(args.file)
-        except Exception as e:
-            print(f"[오류] 로컬 파일 로드 실패: {e}")
-            sys.exit(1)
-    else:
-        print("Step 1. 구글 드라이브에서 최신 재무 데이터 파일 조회 중...")
-        latest_file_name = None
-        def load_local_fallback():
-            nonlocal latest_file_name
-            """cowork/Report/ → trade/result.xlsx 순으로 로컬 파일 탐색."""
-            report_dir = COWORK_DIR / 'Report'
-            local_xlsx = [f for f in report_dir.glob('*.xlsx')] if report_dir.exists() else []
-            if local_xlsx:
-                latest = max(local_xlsx, key=lambda f: f.stat().st_mtime)
-                print(f"로컬 폴백 작동: {latest} 사용")
-                latest_file_name = latest.name
-                return latest.read_bytes()
-            fallback = TRADE_DIR / 'result.xlsx'
-            if fallback.exists():
-                print(f"로컬 폴백 작동: {fallback} 사용")
-                latest_file_name = fallback.name
-                return fallback.read_bytes()
-            print("[오류] 로컬 파일도 존재하지 않습니다.")
-            sys.exit(1)
-
-        import re
-        def extract_timestamp(file_obj):
-            name = file_obj.get('name', '')
-            m = re.search(r'(\d{8}_\d{6})', name)
-            if m: return m.group(1)
-            m = re.search(r'(\d{8})', name)
-            if m: return m.group(1) + "_000000"
-            return "00000000_000000"
-
-        try:
-            files = list_files_in_folder("Stock_Analysis_Results")
-            sheets = [f for f in files if f['mimeType'] == 'application/vnd.google-apps.spreadsheet' or f['name'].endswith('.xlsx')]
-            if sheets:
-                sheets.sort(key=lambda x: x.get('createdTime', ''), reverse=True)
-                latest = sheets[0]
-                print(f"최신 파일 발견: {latest['name']}")
-                latest_file_name = latest['name']
-                if not latest_file_name.endswith('.xlsx'):
-                    latest_file_name += '.xlsx'
-                print("Step 2. Google Sheets 직접 읽기 중...")
-                df = read_sheet_as_df(latest['id'])
-            else:
-                print("[경고] 구글 드라이브에 파일 없음. 로컬 폴백 시도...")
-        except Exception as e:
-            print(f"[경고] 구글 드라이브 접근 실패: {e}. 로컬 폴백 시도...")
-
-        if df is None:
-            content = load_local_fallback()
-            df = pd.read_excel(io.BytesIO(content))
-
-        if not source_file_val:
-            source_file_val = latest_file_name or "unknown_source.xlsx"
-
-    print("Step 3. 데이터 로드 및 1차 필터링 시작...")
-    total_raw = len(df)
-    print(f"로드된 전체 로우 수: {total_raw}개")
-
-    # 필수 컬럼 존재 확인 및 이름 표준화
-    col_mapping = {
-        '종목코드': 'code',
-        '종목명': 'name',
-        '업종': 'sector',
-        'ROE': 'roe',
-        '부채비율': 'debt_ratio',
-        '목표주가': 'target_price',
-        'PBR': 'pbr',
-        'PER': 'per',
-        '영업이익률': 'operating_margin',
-        '외국인순매수': 'foreign_net_buy',
-        '기관순매수': 'inst_net_buy',
-        '시가총액': 'market_cap',
-    }
-
-    # 현재 엑셀 컬럼이 변형되었을 경우를 대비해 매핑 유효성 검사 (목표주가는 옵션 처리)
-    for k in ['종목코드', '종목명', 'ROE', '부채비율']:
-        if k not in df.columns:
-            # 깨진 문자 및 부분 문자 매칭 시도
-            found_col = None
-            for c in df.columns:
-                if k[:2] in str(c) or str(c)[:2] in k:
-                    found_col = c
-                    break
-            if found_col:
-                df.rename(columns={found_col: k}, inplace=True)
-            else:
-                print(f"[오류] 필수 컬럼 '{k}'을 엑셀 파일에서 찾을 수 없습니다.")
-                sys.exit(1)
-
-    # 목표주가는 선택 컬럼으로 매핑 시도
-    if '목표주가' not in df.columns:
-        for c in df.columns:
-            if '목표' in str(c):
-                df.rename(columns={c: '목표주가'}, inplace=True)
-                break
-
-    # 필터링 적용
-    # 1) ETF/ETN 제외 (종목명 기준 필터)
-    exclude_keywords = ['KODEX', 'TIGER', 'ACE', 'SOL', 'ARIRANG', 'KBSTAR', 'HANARO', 'KOSEF', 'TREX', '히어로즈', '마이티', 'UNICORN']
-    df = df[~df['종목명'].str.contains('|'.join(exclude_keywords), na=False)]
-
-    # 2) 우선주 제외
-    df = df[~df['종목명'].str.endswith(('우', '우B', '우C', '우(전환)', '3우B'), na=False)]
-
-    # 3) ROE 10% 미만 제외
-    df['ROE'] = pd.to_numeric(df['ROE'], errors='coerce').fillna(0)
-    df = df[df['ROE'] >= 10.0]
-
-    # 4) 부채비율 제한 적용 (산업군별 차등 적용)
-    df['부채비율'] = pd.to_numeric(df['부채비율'], errors='coerce').fillna(0)
-    df['업종'] = df['업종'].astype(str).fillna('')
-    is_financial = df['업종'].str.contains('은행|증권|보험|손해보험|생명보험', na=False)
-    is_high_leverage = df['업종'].str.contains('건설|조선|해운|항공|전력|가스|에너지|유틸리티|운송', na=False)
-
-    df = df[
-        is_financial |
-        (is_high_leverage & (df['부채비율'] <= 300.0)) |
-        (~is_financial & ~is_high_leverage & (df['부채비율'] <= 150.0))
-    ]
-
-    # 5) 바이오·제약·헬스케어 업종 제외 (투자 정책: 변동성 高, 임상 이진 리스크)
-    BIOTECH_EXCLUDE_KEYWORDS = ['제약', '바이오', '건강관리', '헬스케어']
-    bio_mask = df['업종'].str.contains('|'.join(BIOTECH_EXCLUDE_KEYWORDS), na=False)
-    excluded_bio = df[bio_mask]['종목명'].tolist()
-    df = df[~bio_mask]
-    if excluded_bio:
-        print(f"  [업종제외] 바이오·제약·헬스케어 {len(excluded_bio)}개 종목 Pool에서 제외: {', '.join(excluded_bio[:5])}{'...' if len(excluded_bio) > 5 else ''}")
-
-    # 6) 목표주가는 미보유 시 0원으로 기본 채움 (필터에서 강제 제외 안 함)
-    if '목표주가' in df.columns:
-        df['목표주가'] = pd.to_numeric(df['목표주가'], errors='coerce').fillna(0)
-    else:
-        df['목표주가'] = 0
-
-    print(f"기본 재무 필터 통과 종목: {len(df)}개")
-
-    if len(df) == 0:
-        print("[경고] 필터를 통과한 종목이 하나도 없습니다. 수집을 중단합니다.")
-        sys.exit(0)
-
-    # 섹터별 대장주 판별 (시가총액 기준 섹터 내 순위)
-    if '시가총액' in df.columns:
-        df['시가총액'] = pd.to_numeric(df['시가총액'], errors='coerce').fillna(0)
-    else:
-        df['시가총액'] = 0
-
-    # 시가총액이 0인 종목들 중 주요 대형주들이 누락되는 것을 막기 위해 네이버 금융 실시간 보완
-    missing_cap_mask = df['시가총액'] <= 0
-    missing_count = missing_cap_mask.sum()
-    if missing_count > 0:
-        print(f"  [안내] 시가총액이 0으로 누락된 {missing_count}개 종목에 대해 네이버 금융 실시간 보정 시도...")
-        import requests
-        from bs4 import BeautifulSoup
-        import re
-
-        def get_market_cap_live(code):
-            code_str = str(code).zfill(6)
-            url = f"https://finance.naver.com/item/main.naver?code={code_str}"
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            try:
-                res = requests.get(url, headers=headers, timeout=3)
-                soup = BeautifulSoup(res.text, 'html.parser')
-                for table in soup.find_all('table'):
-                    summary = table.get('summary', '')
-                    if '시가총액 정보' in summary:
-                        td = table.find('td')
-                        if td:
-                            td_text = td.get_text(strip=True).replace(',', '')
-                            val = 0
-                            m_cho = re.search(r'(\d+)조', td_text)
-                            m_uk = re.search(r'(\d+)억', td_text)
-                            if m_cho:
-                                val += int(m_cho.group(1)) * 1000000000000
-                            if m_uk:
-                                val += int(m_uk.group(1)) * 100000000
-                            if not m_cho and not m_uk:
-                                nums = re.findall(r'\d+', td_text)
-                                if nums:
-                                    val = int(nums[0])
-                            return float(val)
-            except Exception:
-                pass
-            return 0.0
-
-        # 시가총액 0인 종목들만 루프 돌며 데이터 수집
-        corrected = 0
-        for idx, row in df[missing_cap_mask].iterrows():
-            live_cap = get_market_cap_live(row['종목코드'])
-            if live_cap > 0:
-                df.at[idx, '시가총액'] = live_cap
-                corrected += 1
-        print(f"  [완료] {corrected}개 종목의 시가총액 데이터 보정 성공!")
-
-    df['sector_cap_rank'] = df.groupby('업종')['시가총액'].transform(
-        lambda x: x.where(x > 0).rank(method='first', ascending=False)
-    ).fillna(999)
-    df['is_sector_leader'] = df['sector_cap_rank'] <= 3
-    df['sector_leader_score'] = df['sector_cap_rank'].apply(
-        lambda r: 100.0 if r == 1 else (60.0 if r <= 3 else 0.0)
-    )
-    leader_count = df['is_sector_leader'].sum()
-    print(f"섹터 대장주 판별 완료: {leader_count}개 종목 (시총 1위={df[df['sector_cap_rank']==1].shape[0]}개, 2~3위={df[df['sector_cap_rank'].between(2,3)].shape[0]}개)")
-
-    # pool_score 계산 및 추가
-    df['pool_score'] = df.apply(calculate_pool_score, axis=1)
-
-    # score 기준 내림차순 정렬
-    df_sorted = df.sort_values(by='pool_score', ascending=False)
+    args = parse_args()
+    print(f"[*] Starting Pool Generation for source_file: {args.source_file}")
     
-    # 100개 제한 로직: pool_score 기준 상위 100개 선정 (대장주 가점이 반영된 최종 점수순)
-    df_pool = df_sorted.head(100).reset_index(drop=True)
-    print(f"최종 선정된 Pool 종목 수: {len(df_pool)}개")
-
-    # DB 적재 형식 구성
-    records = []
-    for _, row in df_pool.iterrows():
-        records.append({
-            'code': str(row['종목코드']).zfill(6),
-            'name': str(row['종목명']),
-            'sector': str(row.get('업종', '기타')),
-            'roe': float(row.get('ROE', 0)),
-            'pbr': float(row.get('PBR', 0)) if pd.notna(row.get('PBR')) else 0.0,
-            'per': float(row.get('PER', 0)) if pd.notna(row.get('PER')) else 0.0,
-            'debt_ratio': float(row.get('부채비율', 0)),
-            'operating_margin': float(row.get('영업이익률', 0)) if pd.notna(row.get('영업이익률')) else 0.0,
-            'target_price': float(row.get('목표주가', 0)),
-            'foreign_net_buy': float(row.get('외국인순매수', 0)) if pd.notna(row.get('외국인순매수')) else 0.0,
-            'inst_net_buy': float(row.get('기관순매수', 0)) if pd.notna(row.get('기관순매수')) else 0.0,
-            'pool_score': float(row['pool_score']),
-            'market_cap': float(row.get('시가총액', 0)) if pd.notna(row.get('시가총액')) else 0.0,
-            'is_sector_leader': bool(row.get('is_sector_leader', False)),
-        })
-
-    # SQLite 적재
-    print("Step 4. SQLite 적재 중...")
-    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-    # 소스 파일명에서 데이터 기준일 추출
-    data_date = datetime.now().strftime('%Y-%m-%d')
-    import re
-    if source_file_val:
-        m = re.search(r'(\d{4})[-_]?(\d{2})[-_]?(\d{2})', source_file_val)
-        if m:
-            data_date = f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
-            print(f"소스 파일명({source_file_val})에서 데이터 기준일({data_date}) 추출 완료.")
-
-    try:
-        conn = sqlite3.connect(SQLITE_PATH)
-        cur = conn.cursor()
-
-        # 동일한 소스 파일의 기존 데이터만 삭제
-        print(f"기존 Pool 데이터 삭제 중 (source_file = {source_file_val})...")
-        cur.execute("DELETE FROM tr_stock_pool WHERE source_file = ?", (source_file_val,))
-
-        for r in records:
-            cur.execute("""
-                INSERT OR REPLACE INTO tr_stock_pool
-                    (code, name, sector, roe, pbr, per, debt_ratio, operating_margin,
-                     target_price, foreign_net_buy, inst_net_buy, pool_score,
-                     market_cap, is_sector_leader, source_file, data_date, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                r['code'], r['name'], r['sector'],
-                r['roe'], r['pbr'], r['per'],
-                r['debt_ratio'], r['operating_margin'],
-                r['target_price'],
-                r['foreign_net_buy'], r['inst_net_buy'],
-                r['pool_score'],
-                r['market_cap'], 1 if r['is_sector_leader'] else 0,
-                source_file_val, data_date, now_str
-            ))
-
-        conn.commit()
-        conn.close()
-        print(f"[완료] {len(records)}개 종목 SQLite tr_stock_pool 테이블 적재 성공! (data_date={data_date})")
-    except Exception as e:
-        print(f"[오류] SQLite 적재 실패: {e}")
+    df = None
+    
+    # 1. 데이터 로드 (드라이브 우선, 없으면 로컬 파일)
+    if args.id:
+        print(f"[*] Downloading from Google Drive ID: {args.id}...")
+        try:
+            from drive_sync import download_from_drive
+            content = download_from_drive(args.id)
+            if content:
+                df = pd.read_excel(io.BytesIO(content))
+                print("[+] Successfully loaded from Drive.")
+        except Exception as e:
+            print(f"[!] Drive download failed: {e}")
+            
+    if df is None and args.file:
+        print(f"[*] Loading from local file: {args.file}...")
+        if os.path.exists(args.file):
+            df = pd.read_excel(args.file)
+            print("[+] Successfully loaded from local file.")
+        else:
+            print(f"[!] Local file not found: {args.file}")
+            
+    if df is None:
+        print("[ERROR] Failed to load any data.")
         sys.exit(1)
+        
+    # 필수 컬럼 체크
+    required_cols = ['종목코드', '종목명', '업종']
+    for col in required_cols:
+        if col not in df.columns:
+            print(f"[ERROR] Missing required column: {col}")
+            sys.exit(1)
+
+    # 1-1. 회계감사의견 필터링 — '적정의견'이 아닌 종목(의견거절, 한정의견 등)은 Pool 구성 자체에서 제외
+    # 감사의견 데이터가 없는 종목(N/A)은 "부적정으로 확인된" 것이 아니라 데이터 결측이므로 제외하지 않는다.
+    if '회계감사의견' in df.columns:
+        before_count = len(df)
+        disqualified = df[~df['회계감사의견'].isin(['적정의견', 'N/A']) & df['회계감사의견'].notna()]
+        if not disqualified.empty:
+            print(f"[*] 감사의견 부적정으로 제외된 종목: {len(disqualified)}건 "
+                  f"({disqualified['회계감사의견'].value_counts().to_dict()})")
+        df = df[df['회계감사의견'].isin(['적정의견', 'N/A']) | df['회계감사의견'].isna()]
+        print(f"[*] 감사의견 필터링: {before_count}건 -> {len(df)}건")
+    else:
+        print("[!] 경고: '회계감사의견' 컬럼이 없어 감사의견 필터링을 건너뜁니다.")
+
+    # 2. 데이터 전처리 및 수치 변환
+    numeric_cols = ['PBR', 'PER', 'ROE', '시가총액', '매출액', '영업이익', '당기순이익', 
+                    '부채비율', '매출액증가율(%)', '영업이익증가율(%)', '순이익증가율(%)', '영업이익률', '순이익률']
+    for col in numeric_cols:
+        if col in df.columns:
+            if df[col].dtype == object:
+                df[col] = df[col].astype(str).str.replace(',', '').str.strip()
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+        else:
+            # 없는 컬럼은 NaN으로 임시 생성
+            df[col] = np.nan
+
+    # 3. 스코어 계산 — 섹터 내 백분위 순위 기반 복합 점수
+    # 단일 지표(ROE-PBR 비율 또는 영업이익 절대 규모)만 쓰면 한쪽으로 쏠린다:
+    #   - 비율(ROE-PBR)만 쓰면 삼성전자·SK하이닉스처럼 밸류에이션이 높게 형성된
+    #     압도적 대형주가 오히려 제외됨.
+    #   - 절대 규모(영업이익)만 쓰면 사실상 몸집 순위가 되어 밸류에이션/성장성/건전성
+    #     데이터가 무의미해짐.
+    #   - 5개 지표를 동일 가중치로 평균하면, 밸류에이션 한 항목만 나빠도 압도적
+    #     대형주가 중위권으로 밀려남 (실측 결과 삼성전자 5위, 한화오션 10위 밖 제외).
+    # 따라서 규모(영업이익)에 절반 가중치를 두어 섹터 대표주가 항상 상위권을
+    # 유지하게 하고, 나머지 절반을 수익성·밸류에이션·성장성·재무건전성으로
+    # 세분화해 동일 규모대 종목 간 우열을 가린다.
+    df['영업이익_fill'] = df['영업이익'].fillna(0.0)
+    df['ROE_fill'] = df['ROE'].fillna(0.0)
+    df['PBR_fill'] = df['PBR'].fillna(df['PBR'].median())
+    df['영업이익증가율_fill'] = df['영업이익증가율(%)'].fillna(0.0)
+    df['부채비율_fill'] = df['부채비율'].fillna(df['부채비율'].median())
+
+    grp = df.groupby('업종')
+    scale_pct = grp['영업이익_fill'].rank(pct=True)                # 규모: 클수록 좋음
+    roe_pct = grp['ROE_fill'].rank(pct=True)                       # 수익성: 클수록 좋음
+    valuation_pct = 1 - grp['PBR_fill'].rank(pct=True)             # 밸류에이션: PBR 낮을수록 좋음
+    growth_pct = grp['영업이익증가율_fill'].rank(pct=True)          # 성장성: 클수록 좋음
+    health_pct = 1 - grp['부채비율_fill'].rank(pct=True)            # 건전성: 부채비율 낮을수록 좋음
+
+    W_SCALE, W_ROE, W_VALUATION, W_GROWTH, W_HEALTH = 0.5, 0.15, 0.15, 0.1, 0.1
+    df['pool_score'] = (
+        scale_pct * W_SCALE + roe_pct * W_ROE + valuation_pct * W_VALUATION
+        + growth_pct * W_GROWTH + health_pct * W_HEALTH
+    ) * 100
+
+    # 4. 주요 섹터 식별 (규모 상위 4개 + 성장 상위 4개 = 8개)
+    # 영업이익 합계 단독 기준으로만 뽑으면 "이미 큰 섹터"만 계속 뽑히고, 화장품·백화점처럼
+    # 아직 규모는 작지만 빠르게 크는 섹터는 영영 후보에 못 낀다. 그렇다고 성장률만 보면
+    # 종목 1~2개짜리 미니 섹터가 기저효과로 왜곡되어 뽑힌다(실측 확인됨).
+    # → 종목수 10개 이상인 섹터만 후보로 삼고, 그중 (a) 영업이익 합계 상위 4개(규모 대표)
+    #   + (b) 영업이익증가율·매출증가율 중앙값 평균 상위 4개(성장 대표)를 합쳐 8개를 구성한다.
+    #   중앙값을 쓰는 이유: 평균은 소수 종목의 급등(기저효과)에 취약함이 실측으로 확인됨.
+    MIN_SECTOR_STOCKS = 10
+    sector_stats = df.groupby('업종').agg(
+        종목수=('영업이익_fill', 'count'),
+        영업이익합계=('영업이익_fill', 'sum'),
+        영업이익증가율_중앙값=('영업이익증가율(%)', 'median'),
+        매출증가율_중앙값=('매출액증가율(%)', 'median'),
+    ).reset_index()
+    sector_stats['성장복합'] = (
+        sector_stats['영업이익증가율_중앙값'].fillna(0.0) + sector_stats['매출증가율_중앙값'].fillna(0.0)
+    ) / 2
+
+    eligible = sector_stats[sector_stats['종목수'] >= MIN_SECTOR_STOCKS]
+
+    top4_scale = eligible.sort_values(by='영업이익합계', ascending=False).head(4)['업종'].tolist()
+    remaining = eligible[~eligible['업종'].isin(top4_scale)]
+    top4_growth = remaining.sort_values(by='성장복합', ascending=False).head(4)['업종'].tolist()
+
+    top_sectors = top4_scale + top4_growth
+    print(f"[*] Top 4 Sectors by Operating Income: {top4_scale}")
+    print(f"[*] Top 4 Sectors by Growth (OpIncome+Revenue median): {top4_growth}")
+
+    # 5. 종목 선발 (섹터별 쿼터제)
+    # sector_category: 화면 섹터탭에서 "규모 대표/성장 대표/기타"를 구분해 표시하기 위한 태그
+    selected_dfs = []
+
+    # 규모 대표 섹터 선발 (섹터당 복합 스코어 상위 10개)
+    for sector in top4_scale:
+        sector_df = df[df['업종'] == sector]
+        leaders = sector_df.sort_values(by='pool_score', ascending=False).head(10).copy()
+        leaders['is_sector_leader'] = 1
+        leaders['sector_category'] = 'scale'
+        selected_dfs.append(leaders)
+
+    # 성장 대표 섹터 선발 (섹터당 복합 스코어 상위 10개)
+    for sector in top4_growth:
+        sector_df = df[df['업종'] == sector]
+        leaders = sector_df.sort_values(by='pool_score', ascending=False).head(10).copy()
+        leaders['is_sector_leader'] = 1
+        leaders['sector_category'] = 'growth'
+        selected_dfs.append(leaders)
+
+    # 기타 섹터 선발 (주요 8대 섹터를 제외한 모든 섹터 통합, 복합 스코어 상위 20개)
+    other_df = df[~df['업종'].isin(top_sectors)]
+    others = other_df.sort_values(by='pool_score', ascending=False).head(20).copy()
+    if not others.empty:
+        others['is_sector_leader'] = 0
+        others['sector_category'] = 'other'
+        selected_dfs.append(others)
+
+    if not selected_dfs:
+        print("[ERROR] No stocks selected.")
+        sys.exit(1)
+
+    final_pool = pd.concat(selected_dfs)
+    print(f"[+] Total selected stocks for pool: {len(final_pool)}")
+    
+    # 6. DB 적재
+    conn = _new_db_conn()
+    cursor = conn.cursor()
+    
+    # 기존 데이터 삭제 (source_file 기준)
+    delete_sql = "DELETE FROM tr_stock_pool WHERE source_file = ?"
+    if DATABASE_URL and DATABASE_URL.startswith('mysql'):
+        cursor.execute(delete_sql, (args.source_file,))
+    else:
+        cursor.execute(delete_sql, (args.source_file,))
+        
+    insert_sql = """
+        INSERT INTO tr_stock_pool (
+            code, name, sector, roe, pbr, per, debt_ratio, operating_margin,
+            target_price, pool_score, data_date, updated_at, market_cap,
+            is_sector_leader, source_file, sector_category
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
+    
+    # 데이터 날짜 파싱 (파일명 내 YYYYMMDD 날짜가 있으면 파싱, 없으면 오늘 날짜)
+    data_date = datetime.now().strftime('%Y-%m-%d')
+    date_match = re.search(r'\d{8}', args.source_file)
+    if date_match:
+        try:
+            raw_date = date_match.group(0)
+            data_date = f"{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:8]}"
+        except Exception:
+            pass
+            
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    # 튜플 구성 및 적재
+    insert_data = []
+    for _, row in final_pool.iterrows():
+        # 종목코드 포맷팅 (6자리 보장)
+        code_str = str(row['종목코드']).strip()
+        if len(code_str) < 6:
+            code_str = code_str.zfill(6)
+            
+        insert_data.append((
+            code_str,
+            str(row['종목명']),
+            str(row['업종']),
+            float(row['ROE']) if not pd.isna(row['ROE']) else 0.0,
+            float(row['PBR']) if not pd.isna(row['PBR']) else 0.0,
+            float(row['PER']) if not pd.isna(row['PER']) else 0.0,
+            float(row['부채비율']) if not pd.isna(row['부채비율']) else 0.0,
+            float(row['영업이익률']) if not pd.isna(row['영업이익률']) else 0.0,
+            float(row['목표주가']) if not pd.isna(row['목표주가']) else 0.0,
+            float(row['pool_score']),
+            data_date,
+            now_str,
+            float(row['시가총액']) if not pd.isna(row['시가총액']) else 0.0,
+            int(row['is_sector_leader']),
+            args.source_file,
+            str(row['sector_category'])
+        ))
+        
+    try:
+        if DATABASE_URL and DATABASE_URL.startswith('mysql'):
+            cursor.executemany(insert_sql.replace('?', '%s'), insert_data)
+        else:
+            cursor.executemany(insert_sql, insert_data)
+        conn.commit()
+        print(f"[+] Successfully saved {len(insert_data)} records to database.")
+    except Exception as e:
+        print(f"[ERROR] Database insert failed: {e}")
+        conn.rollback()
+        sys.exit(1)
+    finally:
+        conn.close()
 
 if __name__ == '__main__':
     main()
