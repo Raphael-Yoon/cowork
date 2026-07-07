@@ -611,6 +611,33 @@ def get_moving_averages(ticker, headers):
         print(f"MA calculation error for {ticker}: {e}")
     return ma_data
 
+def get_news_body(url, headers, max_chars=200):
+    """뉴스 기사 본문 앞부분을 수집합니다 (최대 max_chars자)."""
+    try:
+        res = requests.get(url, headers=headers, timeout=4)
+        ct = res.headers.get('Content-Type', '').lower()
+        soup = BeautifulSoup(
+            res.content.decode('euc-kr', 'replace') if 'euc-kr' in ct else res.text,
+            'html.parser'
+        )
+        # 네이버 금융 뉴스 및 일반 뉴스 본문 선택자 순서대로 시도
+        body_el = (
+            soup.select_one('div.articleCont') or
+            soup.select_one('div#newsct_article') or
+            soup.select_one('div#articeBody') or
+            soup.select_one('article') or
+            soup.select_one('div.news_end div')
+        )
+        if body_el:
+            for tag in body_el.find_all(['script', 'style', 'figure', 'figcaption']):
+                tag.decompose()
+            text = ' '.join(body_el.get_text(separator=' ', strip=True).split())
+            return text[:max_chars] if len(text) > max_chars else text
+    except Exception:
+        pass
+    return ''
+
+
 def get_extra_stock_data(ticker, name, headers, data):
     """
     수급, 뉴스, 이동평균선 등 추가 데이터를 수집합니다.
@@ -750,11 +777,13 @@ def get_extra_stock_data(ticker, name, headers, data):
                         date = ' '.join(date_el.get_text(strip=True).split())
 
                 if title:  # 제목이 있는 경우만 추가
+                    body = get_news_body(link, headers) if link else ''
                     extra['news'].append({
                         'title': title,
                         'link': link,
                         'source': source,
-                        'date': date
+                        'date': date,
+                        'body': body
                     })
 
         # 3. 이동평균선 계산

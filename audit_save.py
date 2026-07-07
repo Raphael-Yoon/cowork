@@ -49,6 +49,65 @@ def save(records: list[dict], data_date: str, rec_type: str = 'momentum'):
     for r in records:
         print(f"   [{r['code']}] {r['name']}  상승여력 {r['upside']:.1f}%")
 
+def _execute_save(conn, db_type, records, data_date, rec_type, now_str):
+    cursor = conn.cursor()
+    placeholder = '?' if db_type == 'sqlite' else '%s'
+    
+    # 해당 추천 유형만 삭제
+    cursor.execute(f"DELETE FROM tr_audit_recommendations WHERE rec_type = {placeholder}", (rec_type,))
+    
+    import re
+    def _get_sector(rec):
+        sector_val = rec.get('sector')
+        if not sector_val:
+            reason_str = rec.get('reason', '')
+            if reason_str and reason_str.startswith('['):
+                m = re.match(r'^\[(.*?)\]', reason_str)
+                if m:
+                    sector_val = m.group(1)
+        return sector_val or '기타'
+
+    for r in records:
+        item_rec_type = r.get('rec_type', rec_type)
+        item_data_date = r.get('data_date', data_date)
+        opinion_val = str(r.get('dividend_yield', '')) if item_rec_type == 'dividend' else r.get('opinion', '')
+        sector_val = _get_sector(r)
+        
+        cursor.execute(f"""
+            INSERT INTO tr_audit_recommendations
+                (code, name, current_price, target_price, upside, opinion, data_date, created_at,
+                 score, roe, debt, reason, news_summary, rec_type, one_liner, disc_json, sector)
+            VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+        """, (
+            r['code'], r['name'], float(r['current_price']), float(r['target_price']),
+            float(r['upside']), opinion_val, item_data_date, now_str, float(r['score']),
+            float(r.get('roe', 0)), float(r.get('debt', 0)), r.get('reason', ''),
+            r.get('news_summary', '[]'), item_rec_type, r.get('one_liner', ''),
+            r.get('disc_json', '[]'), sector_val
+        ))
+    conn.commit()
+    print(f"[완료] {db_type.upper()} tr_audit_recommendations 테이블 적재 성공! (타입: {rec_type})")
+
+def save(records: list[dict], data_date: str, rec_type: str = 'momentum'):
+    if not records:
+        print("[오류] 저장할 데이터가 없습니다.")
+        return
+
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    print(f"[완료] {len(records)}개 종목 DB 적재 시작 (추천유형: {rec_type})")
+    for r in records:
+        print(f"   [{r['code']}] {r['name']}  상승여력 {r['upside']:.1f}%")
+
+    # 1. SQLite 적재 (기본 개발환경)
+    try:
+        conn = sqlite3.connect(SQLITE_PATH)
+        _execute_save(conn, 'sqlite', records, data_date, rec_type, now_str)
+        conn.close()
+    except Exception as sqlite_err:
+        print(f"[오류] SQLITE tr_audit_recommendations 적재 실패: {sqlite_err}")
+
+    # 2. 외부 DB 적재 (설정된 경우)
     try:
         from dotenv import load_dotenv
         COWORK_DIR = Path(__file__).resolve().parent
@@ -56,58 +115,36 @@ def save(records: list[dict], data_date: str, rec_type: str = 'momentum'):
         load_dotenv(TRADE_DIR / '.env')
         database_url = os.getenv('DATABASE_URL')
 
-        db_type = 'sqlite'
-        if database_url and database_url.startswith('postgresql'):
-            import psycopg2
-            import psycopg2.extras
-            conn = psycopg2.connect(database_url, cursor_factory=psycopg2.extras.DictCursor)
-            cursor = conn.cursor()
-            db_type = 'postgres'
-        elif database_url and database_url.startswith('mysql'):
-            import pymysql
-            from urllib.parse import urlparse
-            parsed = urlparse(database_url)
-            conn = pymysql.connect(
-                host=parsed.hostname or '127.0.0.1',
-                port=parsed.port or 3306,
-                user=parsed.username or 'root',
-                password=parsed.password or '',
-                database=parsed.path.lstrip('/') if parsed.path else 'trade',
-                charset='utf8mb4',
-                cursorclass=pymysql.cursors.DictCursor
-            )
-            cursor = conn.cursor()
-            db_type = 'mysql'
-        else:
-            conn = sqlite3.connect(SQLITE_PATH)
-            cursor = conn.cursor()
-            db_type = 'sqlite'
-
-        placeholder = '?' if db_type == 'sqlite' else '%s'
-
-        # 해당 추천 유형만 삭제 후 추가
-        cursor.execute(f"DELETE FROM tr_audit_recommendations WHERE rec_type = {placeholder}", (rec_type,))
-
-        for r in records:
-            item_rec_type = r.get('rec_type', rec_type)
-            item_data_date = r.get('data_date', data_date)
-            opinion_val = str(r.get('dividend_yield', '')) if item_rec_type == 'dividend' else r.get('opinion', '')
-            cursor.execute(f"""
-                INSERT INTO tr_audit_recommendations
-                    (code, name, current_price, target_price, upside, opinion, data_date, created_at,
-                     score, roe, debt, reason, news_summary, rec_type, one_liner, disc_json)
-                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
-            """, (
-                r['code'], r['name'], float(r['current_price']), float(r['target_price']),
-                float(r['upside']), opinion_val, item_data_date, now_str, float(r['score']),
-                float(r.get('roe', 0)), float(r.get('debt', 0)), r.get('reason', ''),
-                r.get('news_summary', '[]'), item_rec_type, r.get('one_liner', ''),
-                r.get('disc_json', '[]')
-            ))
-
-        conn.commit()
-        conn.close()
-        print(f"[완료] {db_type.upper()} tr_audit_recommendations 테이블 적재 성공! (타입: {rec_type})")
+        if database_url:
+            if database_url.startswith('postgresql'):
+                print("[*] PostgreSQL 데이터베이스 연결 중...")
+                import psycopg2
+                try:
+                    conn = psycopg2.connect(database_url)
+                    _execute_save(conn, 'postgres', records, data_date, rec_type, now_str)
+                    conn.close()
+                except Exception as pg_err:
+                    print(f"[오류] POSTGRESQL tr_audit_recommendations 적재 실패: {pg_err}")
+            elif database_url.startswith('mysql'):
+                print("[*] MySQL 데이터베이스 연결 중...")
+                import pymysql
+                from urllib.parse import urlparse
+                parsed = urlparse(database_url)
+                try:
+                    conn = pymysql.connect(
+                        host=parsed.hostname or '127.0.0.1',
+                        port=parsed.port or 3306,
+                        user=parsed.username or 'root',
+                        password=parsed.password or '',
+                        database=parsed.path.lstrip('/') if parsed.path else 'trade',
+                        charset='utf8mb4'
+                    )
+                    _execute_save(conn, 'mysql', records, data_date, rec_type, now_str)
+                    conn.close()
+                except Exception as mysql_err:
+                    print(f"[오류] MYSQL tr_audit_recommendations 적재 실패: {mysql_err}")
+    except Exception as env_err:
+        print(f"[경고] 외부 DB 연결정보 로드 실패: {env_err}")
     except Exception as e:
         print(f"[오류] {db_type.upper()} audit_recommendations 적재 실패: {e}")
 
@@ -117,8 +154,8 @@ def main():
     parser.add_argument('json_file', help='추천 종목 JSON 파일 경로')
     parser.add_argument('--date', default=datetime.now().strftime('%Y-%m-%d'),
                         help='기준일 (기본값: 오늘, 형식: YYYY-MM-DD)')
-    parser.add_argument('--type', default='momentum', choices=['momentum', 'value', 'dividend'],
-                        help='추천 유형 (momentum, value 또는 dividend)')
+    parser.add_argument('--type', default='sector', choices=['sector', 'momentum', 'value', 'dividend'],
+                        help='추천 유형 (sector, momentum, value, dividend)')
     args = parser.parse_args()
 
     json_path = Path(args.json_file)
@@ -127,10 +164,22 @@ def main():
         return
 
     with open(json_path, encoding='utf-8') as f:
-        records = json.load(f)
+        data = json.load(f)
 
-    if isinstance(records, dict) and 'stocks' in records:
-        records = records['stocks']
+    # 섹터별 dict 형식 {"섹터명": [...]} → flat list 변환
+    if isinstance(data, dict) and 'stocks' not in data:
+        records = []
+        for sector_stocks in data.values():
+            if isinstance(sector_stocks, list):
+                for r in sector_stocks:
+                    # rank → score 변환 (rank 1 = score 10, rank 10 = score 1)
+                    if 'rank' in r and 'score' not in r:
+                        r['score'] = max(0.0, 11 - int(r['rank']))
+                    records.append(r)
+    elif isinstance(data, dict) and 'stocks' in data:
+        records = data['stocks']
+    else:
+        records = data
 
     save(records, args.date, args.type)
 

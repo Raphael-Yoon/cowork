@@ -88,6 +88,8 @@ def main():
     # 감사의견 데이터가 없는 종목(N/A)은 "부적정으로 확인된" 것이 아니라 데이터 결측이므로 제외하지 않는다.
     if '회계감사의견' in df.columns:
         before_count = len(df)
+        # 문자열 공백 제거 안전망 추가
+        df['회계감사의견'] = df['회계감사의견'].apply(lambda x: str(x).strip() if pd.notna(x) else x)
         disqualified = df[~df['회계감사의견'].isin(['적정의견', 'N/A']) & df['회계감사의견'].notna()]
         if not disqualified.empty:
             print(f"[*] 감사의견 부적정으로 제외된 종목: {len(disqualified)}건 "
@@ -122,9 +124,10 @@ def main():
     # 세분화해 동일 규모대 종목 간 우열을 가린다.
     df['영업이익_fill'] = df['영업이익'].fillna(0.0)
     df['ROE_fill'] = df['ROE'].fillna(0.0)
-    df['PBR_fill'] = df['PBR'].fillna(df['PBR'].median())
+    # 업종(섹터)별 PBR 및 부채비율 중위값으로 채우고, 업종 전체가 결측일 때만 시장 전체 중위값 적용
+    df['PBR_fill'] = df.groupby('업종')['PBR'].transform(lambda x: x.fillna(x.median())).fillna(df['PBR'].median())
     df['영업이익증가율_fill'] = df['영업이익증가율(%)'].fillna(0.0)
-    df['부채비율_fill'] = df['부채비율'].fillna(df['부채비율'].median())
+    df['부채비율_fill'] = df.groupby('업종')['부채비율'].transform(lambda x: x.fillna(x.median())).fillna(df['부채비율'].median())
 
     grp = df.groupby('업종')
     scale_pct = grp['영업이익_fill'].rank(pct=True)                # 규모: 클수록 좋음
