@@ -26,18 +26,11 @@
 | `Paper/review_guide.md` | 통제별 상세 리뷰 가이드 |
 | `RCM/RCM_Standard.xlsx` | 기본 RCM 표준 서식 |
 
-## 4. Top 10 선정 트리거 (IT 감사팀 전용)
+> [!NOTE]
+> 추천종목(Top 10) 선정 파이프라인(`pool_collect.py`/`select_top_10.py`/`pool_save.py`/`audit_save.py`, `Report/` 문서 포함)은
+> 담당자 이동에 따라 **개발2팀 `trade/` 저장소로 전체 이관**되었다. 관련 로직은 `trade/추천종목_선정_작업지침서.md` 참조.
 
-선정 프로세스, 필터링 기준, 스코어링 알고리즘은 **[audit_logic.md](Report/audit_logic.md)** 를 단일 정의서로 따른다.
-
-| 스크립트 | 역할 |
-|---|---|
-| `cowork/pool_collect.py` | 최신 엑셀 수집 및 필터링 후 pool 100건을 Neon stock_pool 테이블에 저장 |
-| `cowork/select_top_10.py` | pool → Top 10 수집 및 1차 필터링/최종 스코어링 |
-| `cowork/pool_save.py` | AI가 결정한 pool 100건을 Neon stock_pool 테이블에 저장 (수동 저장용) |
-| `cowork/audit_save.py` | AI가 결정한 Top 10을 Neon DB `audit_recommendations` 테이블에 저장 |
-
-## 5. 환경 관리 원칙 (Local)
+## 4. 환경 관리 원칙 (Local)
 
 - **보존 대상**: `Evidence/` 폴더 전체, `Paper/` 원본 엑셀 조서, `RCM/` 폴더
 - **삭제 대상**: 임시 생성한 데이터 매핑용 `.py` 파일 및 테스트 결과 엑셀
