@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>바람길 (Baramgil)</title>
+  
+  <!-- SEO & PWA Meta -->
+  <meta name="description" content="매니저님 맞춤형 정밀 헬스케어 관제 대시보드 - 체성분, 심폐 유산소, 혈액검사 시계열 분석">
+  <meta name="theme-color" content="#10B981">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  
+  <!-- Google Fonts: Pretendard & Inter -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  
+  <!-- Chart.js 4.4 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="brand-logo">
+          <img src="/static/favicon.svg" alt="바람길 로고" width="48" height="48">
+        </div>
+        <div class="brand-titles">
+          <h1>🍃 바람길 <span>Baramgil</span></h1>
+        </div>
+      </div>
+    </header>
+
+    <!-- 1. Hero KPI Cards Grid -->
+    <section class="kpi-grid" aria-label="주요 건강 및 운동 지표 요약">
+      
+      <!-- Card 1: 골격근량 & 체성분 -->
+      <div class="glass-panel kpi-card" style="--card-accent: #10B981;" id="card-body-comp">
+        <div class="kpi-header">
+          <span class="kpi-label">골격근량 사수선</span>
+          <span class="kpi-icon">🛡️</span>
+        </div>
+        <div class="kpi-main-val">
+          <span class="kpi-number" id="kpi-muscle">--</span>
+          <span class="kpi-unit">kg</span>
+          <span style="margin-left: 0.8rem; font-size: 1.1rem; color: var(--text-dim); font-weight: 500;">/ 체중 <strong id="kpi-weight" style="color:#FFF;">--</strong> kg</span>
+        </div>
+        <div class="kpi-subtext" style="flex-wrap: wrap; gap: 0.4rem;">
+          <span class="status-tag tag-success" id="kpi-muscle-status">★ 35.0kg 사수선 수성</span>
+          <span class="status-tag" id="kpi-fat-tag" style="background: rgba(244, 63, 94, 0.15); color: #FDA4AF; border: 1px solid rgba(244, 63, 94, 0.3);">체지방 <strong id="kpi-fat-mass">--</strong>kg (<span id="kpi-fat-pct">--</span>%)</span>
+          <span id="kpi-body-date" style="font-size:0.75rem; width: 100%;">측정치 로딩 중...</span>
+        </div>
+      </div>
+
+      <!-- Card 2: 최근 7일 운동 부하 -->
+      <div class="glass-panel kpi-card" style="--card-accent: #06B6D4;" id="card-week-workout">
+        <div class="kpi-header">
+          <span class="kpi-label">최근 7일 유산소 부하</span>
+          <span class="kpi-icon">⚡</span>
+        </div>
+        <div class="kpi-main-val">
+          <span class="kpi-number" id="kpi-week-distance">--</span>
+          <span class="kpi-unit">km</span>
+          <span style="margin-left: 0.8rem; font-size: 1.1rem; color: var(--text-dim); font-weight: 500;">/ <strong id="kpi-week-kcal" style="color:#FFF;">--</strong> kcal</span>
+        </div>
+        <div class="kpi-subtext">
+          <span class="status-tag tag-info" id="kpi-week-sessions">로딩 중...</span>
+          <span style="font-size:0.75rem;">Zone 2 심폐 대사 최적화</span>
+        </div>
+      </div>
+
+      <!-- Card 3: 다음 분기 피검사 D-Day -->
+      <div class="glass-panel kpi-card" style="--card-accent: #8B5CF6;" id="card-exam-dday">
+        <div class="kpi-header">
+          <span class="kpi-label">다음 분기 정기 피검사</span>
+          <span class="kpi-icon">🩺</span>
+        </div>
+        <div class="kpi-main-val">
+          <span class="kpi-number" id="kpi-exam-dday" style="color: #A78BFA;">D---</span>
+          <span class="kpi-unit" id="kpi-exam-target-date">2026-11-17 예정</span>
+        </div>
+        <div class="kpi-subtext">
+          <span id="kpi-exam-latest-summary" style="font-size: 0.76rem; color: var(--text-muted);">
+            최근 검진: HbA1c 5.7% | TG 157 | 요산 7.81
+          </span>
+        </div>
+      </div>
+
+      <!-- Card 4: 누적 종합 통산 -->
+      <div class="glass-panel kpi-card" style="--card-accent: #F59E0B;" id="card-all-time">
+        <div class="kpi-header">
+          <span class="kpi-label">누적 통산 관리 지표</span>
+          <span class="kpi-icon">🏆</span>
+        </div>
+        <div class="kpi-main-val">
+          <span class="kpi-number" id="kpi-total-dist">--</span>
+          <span style="margin-left: 0.8rem; font-size: 1.1rem; color: var(--text-dim); font-weight: 500;">/ <strong id="kpi-total-kcal" style="color:#FFF;">--</strong></span>
+        </div>
+        <div class="kpi-subtext">
+          <span class="status-tag tag-warning">무결점 선제 신장 보호</span>
+          <span id="kpi-total-period" style="font-size:0.75rem;">2026.09.14 ~ 현재</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 2. Interactive Filter Controller Bar -->
+    <nav class="glass-panel filter-controller" aria-label="데이터 다차원 필터 컨트롤">
+      <div class="filter-group-wrapper">
+        
+        <!-- 기간 선택 필터 -->
+        <div class="filter-group">
+          <span class="filter-group-label">기간</span>
+          <div class="toggle-pills">
+            <button type="button" class="pill-btn" data-filter-days="7" id="btn-filter-7d">최근 7일</button>
+            <button type="button" class="pill-btn" data-filter-days="30" id="btn-filter-30d">최근 30일</button>
+            <button type="button" class="pill-btn active" data-filter-days="all" id="btn-filter-all-days">전체 기간</button>
+          </div>
+        </div>
+
+        <!-- 종목 선택 필터 -->
+        <div class="filter-group">
+          <span class="filter-group-label">종목</span>
+          <div class="toggle-pills">
+            <button type="button" class="pill-btn active" data-filter-sport="all" id="btn-filter-all-sports">전체 종목</button>
+            <button type="button" class="pill-btn" data-filter-sport="cycling" id="btn-filter-cycling">🚴 자전거</button>
+            <button type="button" class="pill-btn" data-filter-sport="walking" id="btn-filter-walking">🚶 걷기</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="filter-info-tag">
+        <span>담담하고 객관적인 데이터 흐름 표출 (Read-Only)</span>
+      </div>
+    </nav>
+
+    <!-- 3. Time-Series Analytics Charts -->
+    <section class="charts-grid" aria-label="시계열 분석 차트">
+      
+      <!-- Chart 1: Body Composition (체중 vs 골격근량) -->
+      <div class="glass-panel chart-card col-span-6" id="panel-body-comp-chart">
+        <div class="chart-header">
+          <div class="chart-titles">
+            <h3>⚖️ 체중 · 골격근량 · 체지방량 트렌드</h3>
+            <p>샤워 직후 체중(kg), 실질 골격근량(kg) 및 체지방량(kg) 3대 체성분 시계열</p>
+          </div>
+          <span class="chart-badge">3대 체성분 복합 축</span>
+        </div>
+        <div class="chart-canvas-container">
+          <canvas id="bodyCompChartCanvas"></canvas>
+        </div>
+        <div class="target-legends">
+          <div class="target-legend-item">
+            <span class="legend-bullet" style="background:#10B981;"></span>
+            <span>골격근량 (사수선 35.0kg 유지)</span>
+          </div>
+          <div class="target-legend-item">
+            <span class="legend-bullet" style="background:#F43F5E;"></span>
+            <span>체지방량 (유산소 감량 타깃)</span>
+          </div>
+          <div class="target-legend-item">
+            <span class="legend-bullet" style="background:#38BDF8;"></span>
+            <span>체중 (77~78kg 초안정 유지)</span>
+          </div>
+          <div class="target-legend-item">
+            <span class="legend-bullet" style="background:#F59E0B; border: 1px dashed #FFF;"></span>
+            <span>35.0kg 마지노선 (근손실 방어)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart 2: Workout Load & Heart Rate (칼로리 & 심박수) -->
+      <div class="glass-panel chart-card col-span-6" id="panel-workout-chart">
+        <div class="chart-header">
+          <div class="chart-titles">
+            <h3>🔥 유산소 운동부하 & Zone 2 심박수</h3>
+            <p>일자별 소모 칼로리(kcal), 이동 거리(km) 및 평균 심박수(BPM)</p>
+          </div>
+          <span class="chart-badge">부하 복합 분석</span>
+        </div>
+        <div class="chart-canvas-container">
+          <canvas id="workoutChartCanvas"></canvas>
+        </div>
+        <div class="target-legends">
+          <div class="target-legend-item">
+            <span class="legend-bullet" style="background:#10B981;"></span>
+            <span>적정 소모 칼로리 (&le;600 kcal)</span>
+          </div>
+          <div class="target-legend-item">
+            <span class="legend-bullet" style="background:#EF4444;"></span>
+            <span>과다 제동 경계 (&gt;600 kcal)</span>
+          </div>
+          <div class="target-legend-item">
+            <span class="legend-bullet" style="background:#F43F5E;"></span>
+            <span>평균 심박수 (Zone 2: 105~125 BPM)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart 3: Clinical Blood Lab Results (피검사 4대 KPI 시계열) -->
+      <div class="glass-panel chart-card col-span-12" id="panel-clinical-chart">
+        <div class="chart-header">
+          <div class="chart-titles">
+            <h3>🩺 분기별 정기 피검사(내분비내과) 목표 추이 시계열</h3>
+            <p>2026년 2월, 4월, 5월, 8월 4대 핵심 지표 개선 추이 및 최종 임상 타깃선</p>
+          </div>
+          <span class="chart-badge">내분비내과 정기 검진</span>
+        </div>
+        <div class="chart-canvas-container" style="min-height: 290px;">
+          <canvas id="clinicalChartCanvas"></canvas>
+        </div>
+        <div class="target-legends">
+          <div class="target-legend-item">
+            <span class="legend-bullet" style="background:#10B981;"></span>
+            <span>당화혈색소 HbA1c (6.1% ➔ 5.7% | <strong>목표: 5.5% 이하</strong>)</span>
+          </div>
+          <div class="target-legend-item">
+            <span class="legend-bullet" style="background:#8B5CF6;"></span>
+            <span>중성지방 TG (217 ➔ 157 mg/dL | <strong>목표: 120 이하</strong>)</span>
+          </div>
+          <div class="target-legend-item">
+            <span class="legend-bullet" style="background:#F59E0B;"></span>
+            <span>요산 Uric Acid (7.3 ➔ 7.81 mg/dL | <strong>목표: 6.50 이하</strong>)</span>
+          </div>
+          <div class="target-legend-item">
+            <span class="legend-bullet" style="background:#06B6D4;"></span>
+            <span>LDL 콜레스테롤 (105 ➔ 74 mg/dL | <strong>유지선: 70~80</strong>)</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 4. Detailed Logs Section (Tabbed Views) -->
+    <section class="details-section" aria-label="세부 운동 및 검사 데이터 일지">
+      
+      <!-- Nav Tabs -->
+      <div class="section-nav-tabs">
+        <button type="button" class="nav-tab-btn active" data-target="tab-workouts" id="tab-btn-workouts">
+          🏃 데일리 운동 일지 및 세션 상세
+        </button>
+        <button type="button" class="nav-tab-btn" data-target="tab-clinical" id="tab-btn-clinical">
+          📋 혈액검사 전 항목 종합 비교표 (33개 항목)
+        </button>
+      </div>
+
+      <!-- Tab 1: Workout History Accordions -->
+      <div class="tab-content-panel" id="tab-workouts">
+        <div class="workout-list" id="workoutListContainer">
+          <div style="padding: 2rem; text-align: center; color: var(--text-dim);">운동 기록 로딩 중...</div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Clinical Lab Master Table -->
+      <div class="tab-content-panel" id="tab-clinical" style="display: none;">
+        <div class="clinical-table-wrapper">
+          <table class="clinical-full-table">
+            <thead>
+              <tr>
+                <th>구분</th>
+                <th>검사항목</th>
+                <th>2026-02-23 (출발점)</th>
+                <th>2026-04-02</th>
+                <th>2026-05-19</th>
+                <th>2026-08-18 (최신)</th>
+                <th>참고치 및 단위</th>
+                <th>판정 및 추이</th>
+              </tr>
+            </thead>
+            <tbody id="clinicalTableBody">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-dim);">피검사 데이터 로딩 중...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div>
+        <strong>바람길 (Baramgil)</strong>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Dashboard JavaScript -->
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

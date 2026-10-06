@@ -23,5 +23,14 @@ __pycache__/
 .DS_Store
 .vscode/
 
-
+# Server Control & Process Scripts (Local Only)
+*_start.sh
+*_stop.sh
+*_reset.sh
+restart_all.sh
+run.bat
+*.pid
+.env
+*.log
+*.db
 *.sh

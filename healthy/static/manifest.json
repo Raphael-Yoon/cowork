@@ -1,0 +1,18 @@
+{
+  "name": "바람길 (Baramgil) - 정밀 헬스케어 관제 시스템",
+  "short_name": "바람길",
+  "description": "개인 맞춤형 정밀 헬스케어 시계열 분석 및 관제 대시보드",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0B0F19",
+  "theme_color": "#10B981",
+  "icons": [
+    {
+      "src": "/static/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
