@@ -1,5 +1,5 @@
 """
-[개발4팀 바람길] 헬스케어 관제 대시보드 코어 서버 (app.py)
+[개발4팀 바람길] 헬스케어 관제 대시보드 코어 서버 (healthy.py)
 - 포트: 5005 (전사 5호 공식 서비스)
 - 프레임워크: Flask + Jinja2 + Chart.js
 - 데이터베이스: 전사 표준 db_config.py 연동 (MySQL 'healthy' 및 SQLite 'healthy.db' 완벽 호환)
@@ -131,6 +131,22 @@ def api_summary():
         )
         latest_clinical = cur.fetchone()
 
+        # 5. 최신 기상 공복혈당 (일상 자가 측정치)
+        cur = db.execute(
+            """
+            SELECT workout_date, morning_fasting_blood_sugar
+            FROM workouts
+            WHERE morning_fasting_blood_sugar IS NOT NULL
+            ORDER BY workout_date DESC
+            LIMIT 1
+            """
+        )
+        latest_fbs_row = cur.fetchone()
+        latest_fbs = {
+            "date": str(latest_fbs_row[0]),
+            "glucose": int(latest_fbs_row[1])
+        } if latest_fbs_row else None
+
         muscle_delta = (
             round(float(latest_body[2]) - float(prev_body[1]), 2)
             if (latest_body and prev_body and latest_body[2] and prev_body[1])
@@ -145,6 +161,7 @@ def api_summary():
         return jsonify({
             "status": "success",
             "db_engine": DB_TYPE,
+            "fasting_blood_sugar": latest_fbs,
             "body": {
                 "date": str(latest_body[0]) if latest_body else None,
                 "weight_kg": float(latest_body[1]) if latest_body else 0,
@@ -539,7 +556,11 @@ def api_clinical_items():
         })
 
 
-if __name__ == "__main__":
+def main():
     port = int(os.getenv("HEALTHY_PORT", 5005))
     print(f"[*] Starting Baramgil Health Dashboard on http://0.0.0.0:{port} (Active DB: {DB_TYPE})")
     app.run(host="0.0.0.0", port=port, debug=True)
+
+
+if __name__ == "__main__":
+    main()

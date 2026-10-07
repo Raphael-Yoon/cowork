@@ -19,10 +19,30 @@
         "avg_heart_rate_bpm": 108,
         "effort": "3 Easy",
         "splits": [
-          {"split": 1, "time": "11:03", "avg_speed_kmh": 5.4, "heart_rate_bpm": 106},
-          {"split": 2, "time": "06:25", "avg_speed_kmh": 9.3, "heart_rate_bpm": 105},
-          {"split": 3, "time": "06:20", "avg_speed_kmh": 9.4, "heart_rate_bpm": 112},
-          {"split": 4, "time": "04:15", "avg_speed_kmh": 10.6, "heart_rate_bpm": 114}
+          {
+            "split": 1,
+            "time": "11:03",
+            "avg_speed_kmh": 5.4,
+            "heart_rate_bpm": 106
+          },
+          {
+            "split": 2,
+            "time": "06:25",
+            "avg_speed_kmh": 9.3,
+            "heart_rate_bpm": 105
+          },
+          {
+            "split": 3,
+            "time": "06:20",
+            "avg_speed_kmh": 9.4,
+            "heart_rate_bpm": 112
+          },
+          {
+            "split": 4,
+            "time": "04:15",
+            "avg_speed_kmh": 10.6,
+            "heart_rate_bpm": 114
+          }
         ]
       },
       {
@@ -38,15 +58,25 @@
         "avg_heart_rate_bpm": 135,
         "effort": "5 Moderate",
         "splits": [
-          {"split": 1, "time": "27:02", "avg_speed_kmh": 11.0, "heart_rate_bpm": 133},
-          {"split": 2, "time": "04:40", "avg_speed_kmh": 9.6, "heart_rate_bpm": 143}
+          {
+            "split": 1,
+            "time": "27:02",
+            "avg_speed_kmh": 11.0,
+            "heart_rate_bpm": 133
+          },
+          {
+            "split": 2,
+            "time": "04:40",
+            "avg_speed_kmh": 9.6,
+            "heart_rate_bpm": 143
+          }
         ]
       }
     ],
     "daily_summary": {
       "total_duration_str": "1:00:08",
       "total_duration_seconds": 3608,
-      "total_distance_km": 9.50,
+      "total_distance_km": 9.5,
       "total_active_kcal": 274,
       "total_kcal": 374,
       "total_elevation_gain_m": 34,
@@ -75,12 +105,48 @@
         "avg_heart_rate_bpm": 114,
         "effort": "4 Moderate",
         "splits": [
-          {"split": 1, "distance_km": 1.0, "time": "11:41", "pace_str": "11'41\"", "heart_rate_bpm": 113},
-          {"split": 2, "distance_km": 1.0, "time": "11:32", "pace_str": "11'32\"", "heart_rate_bpm": 121},
-          {"split": 3, "distance_km": 1.0, "time": "10:50", "pace_str": "10'50\"", "heart_rate_bpm": 118},
-          {"split": 4, "distance_km": 1.0, "time": "11:52", "pace_str": "11'52\"", "heart_rate_bpm": 107},
-          {"split": 5, "distance_km": 1.0, "time": "11:05", "pace_str": "11'05\"", "heart_rate_bpm": 110},
-          {"split": 6, "distance_km": 1.26, "time": "14:25", "pace_str": "11'26\"", "heart_rate_bpm": 114}
+          {
+            "split": 1,
+            "distance_km": 1.0,
+            "time": "11:41",
+            "pace_str": "11'41\"",
+            "heart_rate_bpm": 113
+          },
+          {
+            "split": 2,
+            "distance_km": 1.0,
+            "time": "11:32",
+            "pace_str": "11'32\"",
+            "heart_rate_bpm": 121
+          },
+          {
+            "split": 3,
+            "distance_km": 1.0,
+            "time": "10:50",
+            "pace_str": "10'50\"",
+            "heart_rate_bpm": 118
+          },
+          {
+            "split": 4,
+            "distance_km": 1.0,
+            "time": "11:52",
+            "pace_str": "11'52\"",
+            "heart_rate_bpm": 107
+          },
+          {
+            "split": 5,
+            "distance_km": 1.0,
+            "time": "11:05",
+            "pace_str": "11'05\"",
+            "heart_rate_bpm": 110
+          },
+          {
+            "split": 6,
+            "distance_km": 1.26,
+            "time": "14:25",
+            "pace_str": "11'26\"",
+            "heart_rate_bpm": 114
+          }
         ]
       },
       {
@@ -143,11 +209,36 @@
         "max_heart_rate_bpm": 122,
         "effort": "3 Easy",
         "splits": [
-          {"split": 1, "time": "10:55", "avg_speed_kmh": 5.4, "heart_rate_bpm": 100},
-          {"split": 2, "time": "04:25", "avg_speed_kmh": 13.5, "heart_rate_bpm": 112},
-          {"split": 3, "time": "07:18", "avg_speed_kmh": 8.2, "heart_rate_bpm": 106},
-          {"split": 4, "time": "05:07", "avg_speed_kmh": 11.7, "heart_rate_bpm": 111},
-          {"split": 5, "time": "02:35", "avg_speed_kmh": 7.7, "heart_rate_bpm": 112}
+          {
+            "split": 1,
+            "time": "10:55",
+            "avg_speed_kmh": 5.4,
+            "heart_rate_bpm": 100
+          },
+          {
+            "split": 2,
+            "time": "04:25",
+            "avg_speed_kmh": 13.5,
+            "heart_rate_bpm": 112
+          },
+          {
+            "split": 3,
+            "time": "07:18",
+            "avg_speed_kmh": 8.2,
+            "heart_rate_bpm": 106
+          },
+          {
+            "split": 4,
+            "time": "05:07",
+            "avg_speed_kmh": 11.7,
+            "heart_rate_bpm": 111
+          },
+          {
+            "split": 5,
+            "time": "02:35",
+            "avg_speed_kmh": 7.7,
+            "heart_rate_bpm": 112
+          }
         ]
       },
       {
@@ -164,11 +255,36 @@
         "max_heart_rate_bpm": 169,
         "effort": "6 Moderate",
         "splits": [
-          {"split": 1, "time": "13:16", "avg_speed_kmh": 4.5, "heart_rate_bpm": 114},
-          {"split": 2, "time": "03:41", "avg_speed_kmh": 16.2, "heart_rate_bpm": 147},
-          {"split": 3, "time": "04:05", "avg_speed_kmh": 14.6, "heart_rate_bpm": 147},
-          {"split": 4, "time": "06:44", "avg_speed_kmh": 8.9, "heart_rate_bpm": 141},
-          {"split": 5, "time": "05:48", "avg_speed_kmh": 6.4, "heart_rate_bpm": 131}
+          {
+            "split": 1,
+            "time": "13:16",
+            "avg_speed_kmh": 4.5,
+            "heart_rate_bpm": 114
+          },
+          {
+            "split": 2,
+            "time": "03:41",
+            "avg_speed_kmh": 16.2,
+            "heart_rate_bpm": 147
+          },
+          {
+            "split": 3,
+            "time": "04:05",
+            "avg_speed_kmh": 14.6,
+            "heart_rate_bpm": 147
+          },
+          {
+            "split": 4,
+            "time": "06:44",
+            "avg_speed_kmh": 8.9,
+            "heart_rate_bpm": 141
+          },
+          {
+            "split": 5,
+            "time": "05:48",
+            "avg_speed_kmh": 6.4,
+            "heart_rate_bpm": 131
+          }
         ]
       }
     ],
@@ -204,10 +320,34 @@
         "max_heart_rate_bpm": 142,
         "effort": "4 Moderate",
         "splits": [
-          {"split": 1, "distance_km": 1.0, "time": "12:39", "pace_str": "12'39\"", "heart_rate_bpm": 111},
-          {"split": 2, "distance_km": 1.0, "time": "11:21", "pace_str": "11'21\"", "heart_rate_bpm": 120},
-          {"split": 3, "distance_km": 1.0, "time": "10:58", "pace_str": "10'58\"", "heart_rate_bpm": 124},
-          {"split": 4, "distance_km": 0.65, "time": "07:29", "pace_str": "11'30\"", "heart_rate_bpm": 113}
+          {
+            "split": 1,
+            "distance_km": 1.0,
+            "time": "12:39",
+            "pace_str": "12'39\"",
+            "heart_rate_bpm": 111
+          },
+          {
+            "split": 2,
+            "distance_km": 1.0,
+            "time": "11:21",
+            "pace_str": "11'21\"",
+            "heart_rate_bpm": 120
+          },
+          {
+            "split": 3,
+            "distance_km": 1.0,
+            "time": "10:58",
+            "pace_str": "10'58\"",
+            "heart_rate_bpm": 124
+          },
+          {
+            "split": 4,
+            "distance_km": 0.65,
+            "time": "07:29",
+            "pace_str": "11'30\"",
+            "heart_rate_bpm": 113
+          }
         ]
       },
       {
@@ -224,9 +364,24 @@
         "max_heart_rate_bpm": 142,
         "effort": "4 Moderate",
         "splits": [
-          {"split": 1, "time": "11:54", "avg_speed_kmh": 5.0, "heart_rate_bpm": 117},
-          {"split": 2, "time": "06:38", "avg_speed_kmh": 9.0, "heart_rate_bpm": 122},
-          {"split": 3, "time": "04:34", "avg_speed_kmh": 12.1, "heart_rate_bpm": 125}
+          {
+            "split": 1,
+            "time": "11:54",
+            "avg_speed_kmh": 5.0,
+            "heart_rate_bpm": 117
+          },
+          {
+            "split": 2,
+            "time": "06:38",
+            "avg_speed_kmh": 9.0,
+            "heart_rate_bpm": 122
+          },
+          {
+            "split": 3,
+            "time": "04:34",
+            "avg_speed_kmh": 12.1,
+            "heart_rate_bpm": 125
+          }
         ]
       },
       {
@@ -284,7 +439,7 @@
         "duration_str": "0:30:45",
         "duration_seconds": 1845,
         "distance_km": 4.62,
-        "recorded_gps_distance_km": 0.190,
+        "recorded_gps_distance_km": 0.19,
         "active_kcal": 312,
         "total_kcal": 366,
         "elevation_gain_m": 30,
@@ -308,10 +463,34 @@
         "avg_heart_rate_bpm": 127,
         "max_heart_rate_bpm": 142,
         "splits": [
-          {"split": 1, "distance_km": 1.0, "time": "13:08", "pace_str": "13'08\"", "heart_rate_bpm": 125},
-          {"split": 2, "distance_km": 1.0, "time": "12:50", "pace_str": "12'50\"", "heart_rate_bpm": 125},
-          {"split": 3, "distance_km": 1.0, "time": "13:33", "pace_str": "13'33\"", "heart_rate_bpm": 126},
-          {"split": 4, "distance_km": 0.43, "time": "05:42", "pace_str": "13'13\"", "heart_rate_bpm": 131}
+          {
+            "split": 1,
+            "distance_km": 1.0,
+            "time": "13:08",
+            "pace_str": "13'08\"",
+            "heart_rate_bpm": 125
+          },
+          {
+            "split": 2,
+            "distance_km": 1.0,
+            "time": "12:50",
+            "pace_str": "12'50\"",
+            "heart_rate_bpm": 125
+          },
+          {
+            "split": 3,
+            "distance_km": 1.0,
+            "time": "13:33",
+            "pace_str": "13'33\"",
+            "heart_rate_bpm": 126
+          },
+          {
+            "split": 4,
+            "distance_km": 0.43,
+            "time": "05:42",
+            "pace_str": "13'13\"",
+            "heart_rate_bpm": 131
+          }
         ],
         "notes": "점심 식사 이후 45분간 3.43km 산책. 식후 혈당 피크 억제 및 대사 활성화."
       }
@@ -398,12 +577,48 @@
         "max_heart_rate_bpm": 143,
         "effort": "5 Moderate",
         "splits": [
-          {"split": 1, "distance_km": 1.0, "time": "13:49", "pace_str": "13'49\"", "heart_rate_bpm": 118},
-          {"split": 2, "distance_km": 1.0, "time": "12:38", "pace_str": "12'38\"", "heart_rate_bpm": 127},
-          {"split": 3, "distance_km": 1.0, "time": "11:39", "pace_str": "11'39\"", "heart_rate_bpm": 115},
-          {"split": 4, "distance_km": 1.0, "time": "11:57", "pace_str": "11'57\"", "heart_rate_bpm": 121},
-          {"split": 5, "distance_km": 1.0, "time": "12:18", "pace_str": "12'18\"", "heart_rate_bpm": 121},
-          {"split": 6, "distance_km": 0.94, "time": "17:10", "pace_str": "18'15\"", "heart_rate_bpm": 114}
+          {
+            "split": 1,
+            "distance_km": 1.0,
+            "time": "13:49",
+            "pace_str": "13'49\"",
+            "heart_rate_bpm": 118
+          },
+          {
+            "split": 2,
+            "distance_km": 1.0,
+            "time": "12:38",
+            "pace_str": "12'38\"",
+            "heart_rate_bpm": 127
+          },
+          {
+            "split": 3,
+            "distance_km": 1.0,
+            "time": "11:39",
+            "pace_str": "11'39\"",
+            "heart_rate_bpm": 115
+          },
+          {
+            "split": 4,
+            "distance_km": 1.0,
+            "time": "11:57",
+            "pace_str": "11'57\"",
+            "heart_rate_bpm": 121
+          },
+          {
+            "split": 5,
+            "distance_km": 1.0,
+            "time": "12:18",
+            "pace_str": "12'18\"",
+            "heart_rate_bpm": 121
+          },
+          {
+            "split": 6,
+            "distance_km": 0.94,
+            "time": "17:10",
+            "pace_str": "18'15\"",
+            "heart_rate_bpm": 114
+          }
         ],
         "notes": "거리 집계 정상 복구(5.94 km). 고도 124m 극복 및 평균 119 BPM 유지."
       },
@@ -477,11 +692,36 @@
         "avg_heart_rate_bpm": 124,
         "effort": "5 Moderate",
         "splits": [
-          {"split": 1, "time": "05:46", "avg_speed_kmh": 10.4, "heart_rate_bpm": 122},
-          {"split": 2, "time": "06:34", "avg_speed_kmh": 9.1, "heart_rate_bpm": 124},
-          {"split": 3, "time": "06:06", "avg_speed_kmh": 9.8, "heart_rate_bpm": 121},
-          {"split": 4, "time": "05:48", "avg_speed_kmh": 10.3, "heart_rate_bpm": 124},
-          {"split": 5, "time": "02:43", "avg_speed_kmh": 10.8, "heart_rate_bpm": 127}
+          {
+            "split": 1,
+            "time": "05:46",
+            "avg_speed_kmh": 10.4,
+            "heart_rate_bpm": 122
+          },
+          {
+            "split": 2,
+            "time": "06:34",
+            "avg_speed_kmh": 9.1,
+            "heart_rate_bpm": 124
+          },
+          {
+            "split": 3,
+            "time": "06:06",
+            "avg_speed_kmh": 9.8,
+            "heart_rate_bpm": 121
+          },
+          {
+            "split": 4,
+            "time": "05:48",
+            "avg_speed_kmh": 10.3,
+            "heart_rate_bpm": 124
+          },
+          {
+            "split": 5,
+            "time": "02:43",
+            "avg_speed_kmh": 10.8,
+            "heart_rate_bpm": 127
+          }
         ]
       },
       {
@@ -498,8 +738,18 @@
         "max_heart_rate_bpm": 162,
         "effort": "5 Moderate",
         "splits": [
-          {"split": 1, "time": "27:51", "avg_speed_kmh": 10.7, "heart_rate_bpm": 134},
-          {"split": 2, "time": "03:03", "avg_speed_kmh": 3.9, "heart_rate_bpm": 137}
+          {
+            "split": 1,
+            "time": "27:51",
+            "avg_speed_kmh": 10.7,
+            "heart_rate_bpm": 134
+          },
+          {
+            "split": 2,
+            "time": "03:03",
+            "avg_speed_kmh": 3.9,
+            "heart_rate_bpm": 137
+          }
         ]
       }
     ],
@@ -526,7 +776,7 @@
       "weight_kg": 77.1,
       "body_fat_pct": 19.6,
       "skeletal_muscle_mass_kg": 34.9,
-      "bmi": 23.40
+      "bmi": 23.4
     },
     "sessions": [
       {
@@ -544,11 +794,36 @@
         "max_heart_rate_bpm": 143,
         "effort": "5 Moderate",
         "splits": [
-          {"split": 1, "time": "13:25", "pace": "13'25\"", "heart_rate_bpm": 117},
-          {"split": 2, "time": "12:09", "pace": "12'09\"", "heart_rate_bpm": 124},
-          {"split": 3, "time": "11:37", "pace": "11'37\"", "heart_rate_bpm": 122},
-          {"split": 4, "time": "13:35", "pace": "13'35\"", "heart_rate_bpm": 112},
-          {"split": 5, "time": "13:34", "pace": "13'34\"", "heart_rate_bpm": 113}
+          {
+            "split": 1,
+            "time": "13:25",
+            "pace": "13'25\"",
+            "heart_rate_bpm": 117
+          },
+          {
+            "split": 2,
+            "time": "12:09",
+            "pace": "12'09\"",
+            "heart_rate_bpm": 124
+          },
+          {
+            "split": 3,
+            "time": "11:37",
+            "pace": "11'37\"",
+            "heart_rate_bpm": 122
+          },
+          {
+            "split": 4,
+            "time": "13:35",
+            "pace": "13'35\"",
+            "heart_rate_bpm": 112
+          },
+          {
+            "split": 5,
+            "time": "13:34",
+            "pace": "13'34\"",
+            "heart_rate_bpm": 113
+          }
         ]
       }
     ],
@@ -583,33 +858,36 @@
         "name": "가는 길 (카페 행 웜업 순항)",
         "duration_str": "0:27:13",
         "duration_seconds": 1633,
-        "distance_km": 0.575,
+        "distance_km": 4.8,
         "estimated_actual_distance_km": 4.5,
         "active_kcal": 160,
         "total_kcal": 208,
         "elevation_gain_m": 7,
-        "avg_speed_kmh": 1.2,
+        "avg_speed_kmh": 10.6,
         "avg_heart_rate_bpm": 106,
         "max_heart_rate_bpm": 130,
         "effort": "3 Easy",
-        "notes": "GPS 초기 수신 오류로 575m만 표기되었으나 심박 및 시간 정상."
+        "notes": "GPS 초기 오류 실측 보정. 성수 패파 행 4.8km 웜업 순항 (27분간 208 kcal)."
       },
       {
         "session_id": 2,
         "name": "오는 길 (자전거 전용도로 쾌속 질주)",
         "duration_str": "0:34:32",
         "duration_seconds": 2072,
-        "distance_km": 0.0,
+        "distance_km": 7.2,
         "estimated_actual_distance_km": 5.2,
         "active_kcal": 312,
         "total_kcal": 374,
         "elevation_gain_m": 28,
-        "avg_speed_kmh": 0.0,
+        "avg_speed_kmh": 12.5,
         "avg_heart_rate_bpm": 132,
         "max_heart_rate_bpm": 162,
         "effort": "6 Moderate",
-        "awards": ["Cycling Workout Record 312 kcal", "7-Workout Week"],
-        "notes": "GPS 수신 끊김으로 속도 0.0표기. 34분간 374 kcal 소각하며 개인 단일 세션 신기록 달성."
+        "awards": [
+          "Cycling Workout Record 312 kcal",
+          "7-Workout Week"
+        ],
+        "notes": "GPS 완전 누락 실측 보정. 한강북자전거길 쾌속 질주 7.2km (34분간 374 kcal 단일 세션 신기록)."
       },
       {
         "session_id": 3,
@@ -661,11 +939,31 @@
         "avg_speed_kmh": 3.36,
         "avg_pace": "17'51\"",
         "splits": [
-          {"split": 1, "time": "15:24", "pace": "15'24\""},
-          {"split": 2, "time": "30:53", "pace": "30'53\""},
-          {"split": 3, "time": "14:57", "pace": "14'57\""},
-          {"split": 4, "time": "15:14", "pace": "15'14\""},
-          {"split": 5, "time": "15:12", "pace": "15'12\""}
+          {
+            "split": 1,
+            "time": "15:24",
+            "pace": "15'24\""
+          },
+          {
+            "split": 2,
+            "time": "30:53",
+            "pace": "30'53\""
+          },
+          {
+            "split": 3,
+            "time": "14:57",
+            "pace": "14'57\""
+          },
+          {
+            "split": 4,
+            "time": "15:14",
+            "pace": "15'14\""
+          },
+          {
+            "split": 5,
+            "time": "15:12",
+            "pace": "15'12\""
+          }
         ],
         "notes": "1시간 56분 동안 6.54km 완주. 고도 54m 완만 코스, 여유로운 페이스의 장시간 유산소."
       }
@@ -693,18 +991,38 @@
         "name": "토요일 힐클라임 워킹",
         "duration_str": "1:45:43",
         "duration_seconds": 6343,
-        "distance_km": 6.60,
+        "distance_km": 6.6,
         "active_kcal": 355,
         "total_kcal": 543,
         "elevation_gain_m": 77,
         "avg_speed_kmh": 3.75,
         "avg_pace": "16'00\"",
         "splits": [
-          {"split": 1, "time": "14:04", "pace": "14'04\""},
-          {"split": 2, "time": "13:57", "pace": "13'57\""},
-          {"split": 3, "time": "26:39", "pace": "26'39\""},
-          {"split": 4, "time": "14:03", "pace": "14'03\""},
-          {"split": 5, "time": "13:58", "pace": "13'58\""}
+          {
+            "split": 1,
+            "time": "14:04",
+            "pace": "14'04\""
+          },
+          {
+            "split": 2,
+            "time": "13:57",
+            "pace": "13'57\""
+          },
+          {
+            "split": 3,
+            "time": "26:39",
+            "pace": "26'39\""
+          },
+          {
+            "split": 4,
+            "time": "14:03",
+            "pace": "14'03\""
+          },
+          {
+            "split": 5,
+            "time": "13:58",
+            "pace": "13'58\""
+          }
         ],
         "notes": "1시간 45분 43초간 6.60km 완주. 상승 고도 77m 가파른 힐클라임 파워워킹."
       }
@@ -712,7 +1030,7 @@
     "daily_summary": {
       "total_duration_str": "1:45:43",
       "total_duration_seconds": 6343,
-      "total_distance_km": 6.60,
+      "total_distance_km": 6.6,
       "total_active_kcal": 355,
       "total_kcal": 543,
       "total_elevation_gain_m": 77,
@@ -805,7 +1123,7 @@
         "name": "오전 힐클라임 걷기",
         "duration_str": "1:20:15",
         "duration_seconds": 4815,
-        "distance_km": 5.90,
+        "distance_km": 5.9,
         "active_kcal": 368,
         "total_kcal": 511,
         "elevation_gain_m": 109,
@@ -815,11 +1133,36 @@
         "max_heart_rate_bpm": 140,
         "effort": "5 Moderate",
         "splits": [
-          {"split": 1, "time": "12:32", "pace": "12'32\"", "heart_rate_bpm": 101},
-          {"split": 2, "time": "13:31", "pace": "13'31\"", "heart_rate_bpm": 118},
-          {"split": 3, "time": "12:15", "pace": "12'15\"", "heart_rate_bpm": 123},
-          {"split": 4, "time": "14:21", "pace": "14'21\"", "heart_rate_bpm": 116},
-          {"split": 5, "time": "13:59", "pace": "13'59\"", "heart_rate_bpm": 117}
+          {
+            "split": 1,
+            "time": "12:32",
+            "pace": "12'32\"",
+            "heart_rate_bpm": 101
+          },
+          {
+            "split": 2,
+            "time": "13:31",
+            "pace": "13'31\"",
+            "heart_rate_bpm": 118
+          },
+          {
+            "split": 3,
+            "time": "12:15",
+            "pace": "12'15\"",
+            "heart_rate_bpm": 123
+          },
+          {
+            "split": 4,
+            "time": "14:21",
+            "pace": "14'21\"",
+            "heart_rate_bpm": 116
+          },
+          {
+            "split": 5,
+            "time": "13:59",
+            "pace": "13'59\"",
+            "heart_rate_bpm": 117
+          }
         ],
         "notes": "1시간 20분 15초간 5.90km 완주. 고도 109m 업힐 극복, Zone 2(116 BPM) 완벽 통제."
       }
@@ -827,7 +1170,7 @@
     "daily_summary": {
       "total_duration_str": "1:20:15",
       "total_duration_seconds": 4815,
-      "total_distance_km": 5.90,
+      "total_distance_km": 5.9,
       "total_active_kcal": 368,
       "total_kcal": 511,
       "total_elevation_gain_m": 109,
@@ -866,11 +1209,36 @@
         "max_heart_rate_bpm": 123,
         "effort": "3 Easy",
         "splits": [
-          {"split": 1, "time": "12:23", "pace": "12'23\"", "heart_rate_bpm": 100},
-          {"split": 2, "time": "12:01", "pace": "12'01\"", "heart_rate_bpm": 112},
-          {"split": 3, "time": "12:26", "pace": "12'26\"", "heart_rate_bpm": 112},
-          {"split": 4, "time": "13:44", "pace": "13'44\"", "heart_rate_bpm": 104},
-          {"split": 5, "time": "13:04", "pace": "13'04\"", "heart_rate_bpm": 105}
+          {
+            "split": 1,
+            "time": "12:23",
+            "pace": "12'23\"",
+            "heart_rate_bpm": 100
+          },
+          {
+            "split": 2,
+            "time": "12:01",
+            "pace": "12'01\"",
+            "heart_rate_bpm": 112
+          },
+          {
+            "split": 3,
+            "time": "12:26",
+            "pace": "12'26\"",
+            "heart_rate_bpm": 112
+          },
+          {
+            "split": 4,
+            "time": "13:44",
+            "pace": "13'44\"",
+            "heart_rate_bpm": 104
+          },
+          {
+            "split": 5,
+            "time": "13:04",
+            "pace": "13'04\"",
+            "heart_rate_bpm": 105
+          }
         ],
         "notes": "1시간 20분 56초간 6.14km 완주. 고도 110m 극복에도 평균 심박 107 BPM의 경이로운 심폐 효율성 달성."
       }
@@ -917,11 +1285,36 @@
         "max_heart_rate_bpm": 132,
         "effort": "4 Moderate",
         "splits": [
-          {"split": 1, "time": "13:30", "pace": "13'30\"", "heart_rate_bpm": 113},
-          {"split": 2, "time": "12:07", "pace": "12'07\"", "heart_rate_bpm": 118},
-          {"split": 3, "time": "12:06", "pace": "12'06\"", "heart_rate_bpm": 116},
-          {"split": 4, "time": "13:29", "pace": "13'29\"", "heart_rate_bpm": 109},
-          {"split": 5, "time": "13:04", "pace": "13'04\"", "heart_rate_bpm": 110}
+          {
+            "split": 1,
+            "time": "13:30",
+            "pace": "13'30\"",
+            "heart_rate_bpm": 113
+          },
+          {
+            "split": 2,
+            "time": "12:07",
+            "pace": "12'07\"",
+            "heart_rate_bpm": 118
+          },
+          {
+            "split": 3,
+            "time": "12:06",
+            "pace": "12'06\"",
+            "heart_rate_bpm": 116
+          },
+          {
+            "split": 4,
+            "time": "13:29",
+            "pace": "13'29\"",
+            "heart_rate_bpm": 109
+          },
+          {
+            "split": 5,
+            "time": "13:04",
+            "pace": "13'04\"",
+            "heart_rate_bpm": 110
+          }
         ],
         "notes": "1시간 9분간 5.35km 완주. 고도 110m 극복, 12분대 쾌속 페이스 및 113 BPM 순수 Zone 2 완벽 유지."
       },
@@ -939,9 +1332,24 @@
         "max_heart_rate_bpm": 125,
         "effort": "2 Easy",
         "splits": [
-          {"split": 1, "time": "11:55", "avg_speed_kmh": 5.0, "heart_rate_bpm": 113},
-          {"split": 2, "time": "05:42", "avg_speed_kmh": 10.5, "heart_rate_bpm": 113},
-          {"split": 3, "time": "01:19", "avg_speed_kmh": 3.9, "heart_rate_bpm": 112}
+          {
+            "split": 1,
+            "time": "11:55",
+            "avg_speed_kmh": 5.0,
+            "heart_rate_bpm": 113
+          },
+          {
+            "split": 2,
+            "time": "05:42",
+            "avg_speed_kmh": 10.5,
+            "heart_rate_bpm": 113
+          },
+          {
+            "split": 3,
+            "time": "01:19",
+            "avg_speed_kmh": 3.9,
+            "heart_rate_bpm": 112
+          }
         ],
         "notes": "걷기 직후 자전거 환승 1차. 113 BPM의 안정적 페달링."
       },
@@ -950,12 +1358,12 @@
         "name": "자전거 2차 - 귀가 라이딩",
         "duration_str": "0:13:43",
         "duration_seconds": 823,
-        "distance_km": 0.0,
+        "distance_km": 2.08,
         "estimated_actual_distance_km": 3.2,
         "active_kcal": 74,
         "total_kcal": 99,
         "elevation_gain_m": 13,
-        "avg_speed_kmh": 0.0,
+        "avg_speed_kmh": 9.1,
         "avg_heart_rate_bpm": 112,
         "max_heart_rate_bpm": 132,
         "effort": "3 Easy",
@@ -964,7 +1372,7 @@
           "humidity_pct": 69,
           "air_quality": 54
         },
-        "notes": "GPS 미수신으로 0.0km 표기. 112 BPM의 쿨다운 순항 귀가."
+        "notes": "GPS 미수신 실측 보정. 카페 귀가 라이딩 2.08km (13분간 99 kcal, 평균 112 BPM)."
       }
     ],
     "daily_summary": {
@@ -1051,12 +1459,42 @@
         "max_heart_rate_bpm": 135,
         "effort": "4 Moderate",
         "splits": [
-          {"split": 1, "distance_km": 1.0, "time": "13:17", "heart_rate_bpm": 109},
-          {"split": 2, "distance_km": 1.0, "time": "13:00", "heart_rate_bpm": 116},
-          {"split": 3, "distance_km": 1.0, "time": "13:09", "heart_rate_bpm": 107},
-          {"split": 4, "distance_km": 1.0, "time": "12:01", "heart_rate_bpm": 110},
-          {"split": 5, "distance_km": 1.0, "time": "13:14", "heart_rate_bpm": 111},
-          {"split": 6, "distance_km": 1.25, "time": "21:50", "heart_rate_bpm": 108}
+          {
+            "split": 1,
+            "distance_km": 1.0,
+            "time": "13:17",
+            "heart_rate_bpm": 109
+          },
+          {
+            "split": 2,
+            "distance_km": 1.0,
+            "time": "13:00",
+            "heart_rate_bpm": 116
+          },
+          {
+            "split": 3,
+            "distance_km": 1.0,
+            "time": "13:09",
+            "heart_rate_bpm": 107
+          },
+          {
+            "split": 4,
+            "distance_km": 1.0,
+            "time": "12:01",
+            "heart_rate_bpm": 110
+          },
+          {
+            "split": 5,
+            "distance_km": 1.0,
+            "time": "13:14",
+            "heart_rate_bpm": 111
+          },
+          {
+            "split": 6,
+            "distance_km": 1.25,
+            "time": "21:50",
+            "heart_rate_bpm": 108
+          }
         ]
       },
       {
@@ -1080,8 +1518,20 @@
           "air_quality": 56
         },
         "splits": [
-          {"split": 1, "distance_km": 1.0, "time": "08:59", "avg_speed_kmh": 6.6, "heart_rate_bpm": 115},
-          {"split": 2, "distance_km": 0.21, "time": "01:28", "avg_speed_kmh": 8.7, "heart_rate_bpm": 110}
+          {
+            "split": 1,
+            "distance_km": 1.0,
+            "time": "08:59",
+            "avg_speed_kmh": 6.6,
+            "heart_rate_bpm": 115
+          },
+          {
+            "split": 2,
+            "distance_km": 0.21,
+            "time": "01:28",
+            "avg_speed_kmh": 8.7,
+            "heart_rate_bpm": 110
+          }
         ]
       }
     ],
@@ -1101,14 +1551,14 @@
     "date": "2026-10-06",
     "day_of_week": "Tue",
     "time_of_day": "새벽",
-    "workout_type": "야외 걷기 (Walking)",
-    "routine": "화요일 평지 쾌속 파워워킹 (관절 보호)",
+    "workout_type": "야외 걷기 (Walking) + 야외 자전거 (Cycling)",
+    "routine": "화요일 3단 복합 유산소 (새벽 파워워킹 + 미용실 자전거 왕복)",
     "post_workout_body_comp": {
       "weight_kg": 78.2,
       "body_fat_pct": 21.2,
       "skeletal_muscle_mass_kg": 35.1,
       "bmi": 23.74,
-      "notes": "78.2kg 안정 유지. 골격근량 35.1kg 완벽 수성(근손실 0.0g 철통 방어 입증). 월·화 2일 연속 1,105 kcal 대용량 유산소 발한(약 1.2~1.3L 배출)에 따른 체수분 감소로 체지방률 일시적 21.2% 착시. 수분 1.5L 보충 필수."
+      "notes": "78.2kg 안정 유지. 골격근량 35.1kg 완벽 수성(근손실 0.0g 철통 방어 입증). 월·화 2일 연속 1,384 kcal 대용량 유산소 발한에 따른 체수분 감소로 체지방률 일시적 21.2% 착시. 수분 1.5L 보충 필수."
     },
     "sessions": [
       {
@@ -1132,29 +1582,214 @@
           "air_quality": 50
         },
         "splits": [
-          {"split": 1, "distance_km": 1.0, "time": "13분대 초반", "heart_rate_bpm": 109},
-          {"split": 2, "distance_km": 1.0, "time": "11:40", "speed_kmh": 5.14, "heart_rate_bpm": 117},
-          {"split": 3, "distance_km": 4.08, "time": "52:00대", "notes": "안정적 12분대 후반 순항"}
+          {
+            "split": 1,
+            "distance_km": 1.0,
+            "time": "13분대 초반",
+            "heart_rate_bpm": 109
+          },
+          {
+            "split": 2,
+            "distance_km": 1.0,
+            "time": "11:40",
+            "speed_kmh": 5.14,
+            "heart_rate_bpm": 117
+          },
+          {
+            "split": 3,
+            "distance_km": 4.08,
+            "time": "52:00대",
+            "notes": "안정적 12분대 후반 순항"
+          }
         ],
         "notes": "쌀쌀한 가을 새벽 6.08km 쾌속 보행. 어제 힐클라임(고도 127m) 대비 완벽한 평지(고도 8m)로 관절 충격 최소화. 12분대 페이스에도 평균 113 BPM 저심박 유지."
+      },
+      {
+        "session_id": 2,
+        "workout_type": "야외 자전거 (Outdoor Cycling)",
+        "name": "미용실 가는 길 라이딩",
+        "time_range": "10:05 ~ 10:25 AM 추정",
+        "duration_str": "0:20:32",
+        "duration_seconds": 1232,
+        "distance_km": 1.33,
+        "active_kcal": 118,
+        "total_kcal": 154,
+        "elevation_gain_m": 36,
+        "avg_speed_kmh": 3.8,
+        "avg_heart_rate_bpm": 116,
+        "max_heart_rate_bpm": 157,
+        "effort": "4 Moderate",
+        "weather": {
+          "temp_c": 16,
+          "humidity_pct": 58,
+          "air_quality": 45
+        },
+        "splits": [
+          {
+            "split": 1,
+            "distance_km": 1.0,
+            "time": "16:13",
+            "avg_speed_kmh": 3.6,
+            "heart_rate_bpm": 119
+          },
+          {
+            "split": 2,
+            "distance_km": 0.33,
+            "time": "04:19",
+            "avg_speed_kmh": 4.6,
+            "heart_rate_bpm": 110
+          }
+        ],
+        "notes": "미용실 가는 길 1.33km 라이딩. 평균 116 BPM 안정적 Zone 2."
+      },
+      {
+        "session_id": 3,
+        "workout_type": "야외 자전거 (Outdoor Cycling)",
+        "name": "미용실 귀가 라이딩",
+        "time_range": "11:41 ~ 11:55 AM",
+        "duration_str": "0:13:19",
+        "duration_seconds": 799,
+        "distance_km": 1.33,
+        "estimated_actual_distance_km": 1.33,
+        "active_kcal": 101,
+        "total_kcal": 125,
+        "elevation_gain_m": 20,
+        "avg_speed_kmh": 6.0,
+        "avg_heart_rate_bpm": 121,
+        "max_heart_rate_bpm": 140,
+        "effort": "4 Moderate",
+        "weather": {
+          "temp_c": 18,
+          "humidity_pct": 40,
+          "air_quality": 37
+        },
+        "notes": "GPS 미수신 실측 보정. 미용실 귀가 라이딩 1.33km (13분간 125 kcal, 평균 121 BPM)."
       }
     ],
     "daily_summary": {
-      "total_duration_str": "1:17:13",
-      "total_duration_seconds": 4633,
-      "total_distance_km": 6.08,
-      "total_active_kcal": 359,
-      "total_kcal": 497,
-      "total_elevation_gain_m": 8,
-      "avg_heart_rate_bpm": 113,
-      "evaluation": "🟢 적정 (쾌속 평지 파워워킹 & 관절 보호)",
-      "notes": "화요일 오전 쾌속 평지 파워워킹. 1시간 17분간 6.08km, 497 kcal, 고도 8m. 12'42\"/km 고속 보행에도 113 BPM 유지. 어제 힐클라임 후 이상적인 평지 로테이션 완결."
+      "total_duration_str": "1:51:04",
+      "total_duration_seconds": 6664,
+      "total_distance_km": 7.41,
+      "estimated_total_distance_km": 8.74,
+      "total_active_kcal": 578,
+      "total_kcal": 776,
+      "total_elevation_gain_m": 64,
+      "avg_heart_rate_bpm": 115,
+      "evaluation": "🔴 초과다 경계 (절대 STOP!)",
+      "notes": "화요일 3단 복합 유산소 (걷기 77분 + 자전거 34분). 하루 총 111분간 776 kcal 소모(실이동 8.74km+). 월·화 이틀간 누적 1,384 kcal 소각. 신장 사구체 보호 및 요산(7.81) 방어를 위해 오늘 추가 운동 절대 STOP 및 미온수 1.5L+ 보충."
+    }
+  },
+  {
+    "date": "2026-10-07",
+    "day_of_week": "Wed",
+    "time_of_day": "아침",
+    "workout_type": "야외 자전거 (Cycling) + 야외 걷기 (Walking)",
+    "routine": "수요일 모닝 듀얼 유산소 (자전거 왕복 + 쿨다운 보행)",
+    "post_workout_body_comp": {
+      "weight_kg": 77.2,
+      "body_fat_pct": 22.1,
+      "skeletal_muscle_mass_kg": 34.1,
+      "bmi": 23.43,
+      "notes": "체중 77.2kg (-1.0kg 급감, 목표치 77.0kg 근접). 골격근량 34.1kg (-1.0kg) 및 체지방률 22.1%(+0.9%p)는 실제 근손실이 아니라, 3일 연속 1,926 kcal 대용량 유산소 발한(약 2.5~3L 배출)에 따른 근육 세포 내 급성 탈수 BIA 전도도 왜곡 현상. 미온수 700ml+ 즉시 보충 및 따뜻한 라떼로 리커버리 시 근육량 35kg대 즉각 복귀. 신장 보호를 위해 오늘 추가 운동 절대 금지."
+    },
+    "sessions": [
+      {
+        "session_id": 1,
+        "workout_type": "야외 자전거 (Outdoor Cycling)",
+        "name": "자전거 1차 - 가는 길 웜업 라이딩",
+        "time_range": "06:01 ~ 06:24 AM 추정",
+        "duration_str": "0:23:05",
+        "duration_seconds": 1385,
+        "distance_km": 4.8,
+        "estimated_actual_distance_km": 4.5,
+        "active_kcal": 135,
+        "total_kcal": 175,
+        "elevation_gain_m": 7,
+        "avg_speed_kmh": 12.5,
+        "avg_heart_rate_bpm": 109,
+        "max_heart_rate_bpm": 130,
+        "effort": "3 Easy",
+        "weather": {
+          "temp_c": 11,
+          "humidity_pct": 85,
+          "air_quality": 45
+        },
+        "notes": "네이버 지도 실측 코스(현대9단지 ➔ 성수 패파 4.8km) 정합 보정. 23분간 175 kcal 소각, Zone 2 안정적 웜업 라이딩."
+      },
+      {
+        "session_id": 2,
+        "workout_type": "야외 자전거 (Outdoor Cycling)",
+        "name": "자전거 2차 - 전용도로 파워 라이딩",
+        "time_range": "06:43 ~ 07:18 AM",
+        "duration_str": "0:35:31",
+        "duration_seconds": 2131,
+        "distance_km": 7.2,
+        "estimated_actual_distance_km": 7.5,
+        "active_kcal": 225,
+        "total_kcal": 285,
+        "elevation_gain_m": 28,
+        "avg_speed_kmh": 12.2,
+        "avg_heart_rate_bpm": 129,
+        "max_heart_rate_bpm": 167,
+        "effort": "6 Moderate",
+        "weather": {
+          "temp_c": 11,
+          "humidity_pct": 85,
+          "air_quality": 46
+        },
+        "splits": [
+          {
+            "split": 1,
+            "distance_km": 1.0,
+            "time": "28:20",
+            "avg_speed_kmh": 2.1,
+            "heart_rate_bpm": 127
+          },
+          {
+            "split": 2,
+            "distance_km": 0.95,
+            "time": "07:10",
+            "avg_speed_kmh": 7.9,
+            "heart_rate_bpm": 135
+          }
+        ],
+        "notes": "네이버 지도 실측 코스(성수 ➔ 한강북자전거길 5.3km 무정차 파워 질주 ➔ 광장동 복귀 7.2km) 정합 보정. 35분간 285 kcal 소각, 최고 167 BPM(Zone 4~5) 폭발적 심폐 자극."
+      },
+      {
+        "session_id": 3,
+        "workout_type": "야외 걷기 (Outdoor Walk)",
+        "name": "쿨다운 마무리 보행",
+        "time_range": "07:18 ~ 07:30 AM",
+        "duration_str": "0:12:40",
+        "duration_seconds": 760,
+        "distance_km": 0.92,
+        "active_kcal": 59,
+        "total_kcal": 82,
+        "elevation_gain_m": 0,
+        "avg_speed_kmh": 4.35,
+        "avg_pace": "13'48\"",
+        "avg_heart_rate_bpm": 122,
+        "max_heart_rate_bpm": 126,
+        "effort": "4 Moderate",
+        "weather": {
+          "temp_c": 12,
+          "humidity_pct": 84,
+          "air_quality": 43
+        },
+        "notes": "자전거 거치 후 집으로 이어지는 쿨다운 보행. 12분 40초간 918m 정상 기록. 평균 심박 122 BPM으로 부드러운 유산소 쿨다운."
+      }
+    ],
+    "daily_summary": {
+      "total_duration_str": "1:11:16",
+      "total_duration_seconds": 4276,
+      "total_distance_km": 3.24,
+      "estimated_total_distance_km": 12.92,
+      "total_active_kcal": 419,
+      "total_kcal": 542,
+      "total_elevation_gain_m": 35,
+      "avg_heart_rate_bpm": 120,
+      "evaluation": "🟢 적정 상한선 (완벽 제어)",
+      "notes": "수요일 모닝 자전거 2세션 + 걷기 1세션 (총 71분, 542 kcal). 상한선(600 kcal) 이내에서 절제된 운동량 완수. 체중 77.2kg로 급감했으나 3일간 누적 1,926 kcal 유산소에 따른 1L 수분 손실이므로 즉각 미온수 보충 및 오늘 추가 운동 STOP 필수."
     }
   }
 ]
-
-
-
-
-
-

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>바람길 (Baramgil)</title>
+  <title>바람길</title>
   
   <!-- SEO & PWA Meta -->
   <meta name="description" content="매니저님 맞춤형 정밀 헬스케어 관제 대시보드 - 체성분, 심폐 유산소, 혈액검사 시계열 분석">
@@ -32,7 +32,7 @@
           <img src="/static/favicon.svg" alt="바람길 로고" width="48" height="48">
         </div>
         <div class="brand-titles">
-          <h1>🍃 바람길 <span>Baramgil</span></h1>
+          <h1>🍃 바람길</h1>
         </div>
       </div>
     </header>
@@ -75,19 +75,22 @@
         </div>
       </div>
 
-      <!-- Card 3: 다음 분기 피검사 D-Day -->
+      <!-- Card 3: 다음 분기 피검사 & 공복혈당 -->
       <div class="glass-panel kpi-card" style="--card-accent: #8B5CF6;" id="card-exam-dday">
         <div class="kpi-header">
-          <span class="kpi-label">다음 분기 정기 피검사</span>
-          <span class="kpi-icon">🩺</span>
+          <span class="kpi-label">정기 피검사 & 공복혈당</span>
+          <span class="kpi-icon">🩸</span>
         </div>
         <div class="kpi-main-val">
           <span class="kpi-number" id="kpi-exam-dday" style="color: #A78BFA;">D---</span>
           <span class="kpi-unit" id="kpi-exam-target-date">2026-11-17 예정</span>
         </div>
-        <div class="kpi-subtext">
-          <span id="kpi-exam-latest-summary" style="font-size: 0.76rem; color: var(--text-muted);">
-            최근 검진: HbA1c 5.7% | TG 157 | 요산 7.81
+        <div class="kpi-subtext" style="flex-wrap: wrap; gap: 0.4rem;">
+          <span class="status-tag" id="kpi-latest-fbs-tag" style="background: rgba(239, 68, 68, 0.15); color: #FCA5A5; border: 1px solid rgba(239, 68, 68, 0.3);">
+            🩸 기상 공복혈당 <strong id="kpi-fbs-val">--</strong> mg/dL (<span id="kpi-fbs-date">--</span>)
+          </span>
+          <span id="kpi-exam-latest-summary" style="font-size: 0.74rem; width: 100%; color: var(--text-muted);">
+            최근 검진: HbA1c 5.7% | 공복 111 | TG 157 | 요산 7.81
           </span>
         </div>
       </div>
@@ -144,62 +147,92 @@
     <!-- 3. Time-Series Analytics Charts -->
     <section class="charts-grid" aria-label="시계열 분석 차트">
       
-      <!-- Chart 1: Body Composition (체중 vs 골격근량) -->
+      <!-- Chart 1: Body Composition (체중 vs 골격근량 vs 체지방량) -->
       <div class="glass-panel chart-card col-span-6" id="panel-body-comp-chart">
         <div class="chart-header">
           <div class="chart-titles">
             <h3>⚖️ 체중 · 골격근량 · 체지방량 트렌드</h3>
             <p>샤워 직후 체중(kg), 실질 골격근량(kg) 및 체지방량(kg) 3대 체성분 시계열</p>
           </div>
-          <span class="chart-badge">3대 체성분 복합 축</span>
+          <div class="chart-header-actions">
+            <div class="toggle-pills" id="bodycomp-toggle-group">
+              <button type="button" class="pill-btn active" data-bodycomp-view="all">전체 복합</button>
+              <button type="button" class="pill-btn" data-bodycomp-view="muscle">골격근량</button>
+              <button type="button" class="pill-btn" data-bodycomp-view="fat">체지방량</button>
+              <button type="button" class="pill-btn" data-bodycomp-view="weight">체중</button>
+            </div>
+            <span class="chart-badge" id="bodyCompChartBadge">3대 복합 축</span>
+          </div>
+        </div>
+        <!-- 체성분 전용 한줄평 브리핑 배너 -->
+        <div class="chart-summary-banner" id="bodycomp-summary-banner">
+          <span class="summary-badge summary-badge-bodycomp">⚖️ 체성분 브리핑</span>
+          <p class="summary-text" id="bodycompSummaryText">골격근량 35.0kg 사수선을 견고하게 방어하며 안정적인 체성분 밸런스를 유지하고 있습니다.</p>
         </div>
         <div class="chart-canvas-container">
           <canvas id="bodyCompChartCanvas"></canvas>
         </div>
         <div class="target-legends">
-          <div class="target-legend-item">
+          <div class="target-legend-item clickable" data-legend-for="muscle" title="골격근량 단독 보기">
             <span class="legend-bullet" style="background:#10B981;"></span>
             <span>골격근량 (사수선 35.0kg 유지)</span>
           </div>
-          <div class="target-legend-item">
+          <div class="target-legend-item clickable" data-legend-for="fat" title="체지방량 단독 보기">
             <span class="legend-bullet" style="background:#F43F5E;"></span>
             <span>체지방량 (유산소 감량 타깃)</span>
           </div>
-          <div class="target-legend-item">
+          <div class="target-legend-item clickable" data-legend-for="weight" title="체중 단독 보기">
             <span class="legend-bullet" style="background:#38BDF8;"></span>
             <span>체중 (77~78kg 초안정 유지)</span>
           </div>
-          <div class="target-legend-item">
+          <div class="target-legend-item clickable" data-legend-for="muscle" title="골격근 사수선 단독 보기">
             <span class="legend-bullet" style="background:#F59E0B; border: 1px dashed #FFF;"></span>
             <span>35.0kg 마지노선 (근손실 방어)</span>
           </div>
         </div>
       </div>
 
-      <!-- Chart 2: Workout Load & Heart Rate (칼로리 & 심박수) -->
+      <!-- Chart 2: Workout Load & Heart Rate (칼로리 & 심박수 & 거리) -->
       <div class="glass-panel chart-card col-span-6" id="panel-workout-chart">
         <div class="chart-header">
           <div class="chart-titles">
             <h3>🔥 유산소 운동부하 & Zone 2 심박수</h3>
             <p>일자별 소모 칼로리(kcal), 이동 거리(km) 및 평균 심박수(BPM)</p>
           </div>
-          <span class="chart-badge">부하 복합 분석</span>
+          <div class="chart-header-actions">
+            <div class="toggle-pills" id="workout-toggle-group">
+              <button type="button" class="pill-btn active" data-workout-view="all">전체 복합</button>
+              <button type="button" class="pill-btn" data-workout-view="kcal">소모 칼로리</button>
+              <button type="button" class="pill-btn" data-workout-view="hr">평균 심박수</button>
+              <button type="button" class="pill-btn" data-workout-view="dist">이동 거리</button>
+            </div>
+            <span class="chart-badge" id="workoutChartBadge">부하 복합 분석</span>
+          </div>
+        </div>
+        <!-- 운동부하 전용 한줄평 브리핑 배너 -->
+        <div class="chart-summary-banner" id="workout-summary-banner">
+          <span class="summary-badge summary-badge-workout">🔥 운동부하 브리핑</span>
+          <p class="summary-text" id="workoutSummaryText">Zone 2 유산소 심박수 및 소모 칼로리 목표를 달성하며 지방 연소 효율을 극대화하고 있습니다.</p>
         </div>
         <div class="chart-canvas-container">
           <canvas id="workoutChartCanvas"></canvas>
         </div>
         <div class="target-legends">
-          <div class="target-legend-item">
+          <div class="target-legend-item clickable" data-legend-for="kcal" title="적정 칼로리 보기">
             <span class="legend-bullet" style="background:#10B981;"></span>
             <span>적정 소모 칼로리 (&le;600 kcal)</span>
           </div>
-          <div class="target-legend-item">
+          <div class="target-legend-item clickable" data-legend-for="kcal" title="과다 제동 경계 보기">
             <span class="legend-bullet" style="background:#EF4444;"></span>
             <span>과다 제동 경계 (&gt;600 kcal)</span>
           </div>
-          <div class="target-legend-item">
+          <div class="target-legend-item clickable" data-legend-for="hr" title="평균 심박수 단독 보기">
             <span class="legend-bullet" style="background:#F43F5E;"></span>
             <span>평균 심박수 (Zone 2: 105~125 BPM)</span>
+          </div>
+          <div class="target-legend-item clickable" data-legend-for="dist" title="이동 거리 단독 보기">
+            <span class="legend-bullet" style="background:#06B6D4;"></span>
+            <span>이동 거리 (km)</span>
           </div>
         </div>
       </div>
@@ -209,7 +242,7 @@
         <div class="chart-header">
           <div class="chart-titles">
             <h3>🩺 분기별 정기 피검사(내분비내과) 목표 추이 시계열</h3>
-            <p>2026년 2월, 4월, 5월, 8월 4대 핵심 지표 개선 추이 및 최종 임상 타깃선</p>
+            <p>2026년 2월, 4월, 5월, 8월 5대 핵심 임상 지표 개선 추이 및 최종 목표선</p>
           </div>
           <span class="chart-badge">내분비내과 정기 검진</span>
         </div>
@@ -220,6 +253,10 @@
           <div class="target-legend-item">
             <span class="legend-bullet" style="background:#10B981;"></span>
             <span>당화혈색소 HbA1c (6.1% ➔ 5.7% | <strong>목표: 5.5% 이하</strong>)</span>
+          </div>
+          <div class="target-legend-item">
+            <span class="legend-bullet" style="background:#EF4444;"></span>
+            <span>공복혈당 Glucose (117 ➔ 111 mg/dL | <strong>목표: 95 이하</strong>)</span>
           </div>
           <div class="target-legend-item">
             <span class="legend-bullet" style="background:#8B5CF6;"></span>
@@ -288,7 +325,7 @@
     <!-- Footer -->
     <footer class="app-footer">
       <div>
-        <strong>바람길 (Baramgil)</strong>
+        <strong>바람길</strong>
       </div>
     </footer>
 

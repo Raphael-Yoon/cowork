@@ -400,6 +400,68 @@ body {
   color: var(--text-dim);
 }
 
+.chart-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* Chart Summary Banner (임선우 코치 차트별 한줄평 배너) */
+.chart-summary-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.95rem;
+  margin-bottom: 0.85rem;
+  border-radius: var(--radius-md);
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+}
+
+.chart-summary-banner:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.chart-summary-banner .summary-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.summary-badge-bodycomp {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--primary-light);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.summary-badge-workout {
+  background: rgba(244, 63, 94, 0.15);
+  color: #FB7185;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+}
+
+.chart-summary-banner .summary-text {
+  font-size: 0.83rem;
+  line-height: 1.45;
+  color: #E2E8F0;
+  margin: 0;
+  word-break: keep-all;
+}
+
+.chart-summary-banner .summary-text strong {
+  color: #FFFFFF;
+}
+
 .chart-canvas-container {
   position: relative;
   width: 100%;
@@ -423,6 +485,20 @@ body {
   align-items: center;
   gap: 0.35rem;
   color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.target-legend-item.clickable {
+  cursor: pointer;
+  user-select: none;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-sm);
+}
+
+.target-legend-item.clickable:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  transform: translateY(-1px);
 }
 
 .legend-bullet {
